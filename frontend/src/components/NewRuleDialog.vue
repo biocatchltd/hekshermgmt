@@ -19,6 +19,7 @@
                             <v-switch required v-model="newRule.value" label="Value" v-else-if="settingType == 'bool'" />
                             <v-text-field required outlined v-model="newRule.value" label="Value" type="text" v-else-if="settingType == 'str'" />
                             <v-select v-else-if="['Enum', 'Flags'].includes(settingType)" :items="settingOptions" :multiple="'Flags' == settingType" />
+                            <v-textarea v-else v-model="newRule.value" label="Complex value type, use JSON for inserting value." auto-grow/>
                         </v-col>
                     </v-row>
                     <v-row>
@@ -62,6 +63,14 @@ export default {
             if (!this.valid) {
                 return;
             }
+            if (["Sequence", "Mapping"].includes(this.settingType)) {
+                try {
+                    this.newRule.value = JSON.parse(this.newRule.value);
+                } catch (err) {
+                    this.$toast.error("JSON Parse error " + err);
+                    return;
+                }
+            }
             this.$emit('rule-saved');
             console.log(this.newRule);
             this.show = false;
@@ -87,11 +96,17 @@ export default {
             if (['str', 'bool', 'float', 'int'].includes(this.setting.type)) {
                 return this.setting.type;
             }
-            if (this.setting.type.startsWith("Enum")) {
+            else if (this.setting.type.startsWith("Enum")) {
                 return "Enum";
             }
-            if (this.setting.type.startsWith("Flags")) {
+            else if (this.setting.type.startsWith("Flags")) {
                 return "Flags";
+            }
+            else if (this.setting.type.startsWith("Sequence")) {
+                return "Sequence";
+            }
+            else if (this.setting.type.startsWith("Mapping")) {
+                return "Mapping";
             }
             return "error";
         },
