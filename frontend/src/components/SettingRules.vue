@@ -50,9 +50,8 @@ export default {
         closeNewDialog() {
             this.newRuleDialog = false;
         },
-        onNewRule(rule) {
-            console.log(rule);
-            this.rules.push(rule);
+        onNewRule() {
+            console.log("refresh rules..");
         }
     },
     computed: {

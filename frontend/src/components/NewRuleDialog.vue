@@ -14,7 +14,15 @@
                     </v-row>
                     <v-row>
                         <v-col>
-                            <v-text-field label="Information" v-model="newRule.information" outlined/>
+                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-if="setting.type == 'int'" :rules="integerRules" />
+                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-else-if="setting.type == 'float'" />
+                            <v-switch required v-model="newRule.value" label="Value" v-else-if="setting.type == 'bool'" />
+                            <v-text-field required outlined v-model="newRule.value" label="Value" type="text" v-else-if="setting.type == 'str'" />
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <v-col>
+                            <v-text-field label="Information" v-model="newRule.metadata.information" outlined />
                         </v-col>
                     </v-row>
                 </v-container>
@@ -53,12 +61,15 @@ export default {
             if (!this.valid) {
                 return;
             }
-            this.$emit('rule-saved', this.newRule);
+            this.$emit('rule-saved');
+            console.log(this.newRule);
             this.show = false;
         },
         initializeRuleObject() {
             let rule = {
-                information: ""
+                metadata: {
+                    information: ""
+                }
 
             };
             let contextFeatures = this.setting.configurable_features.reduce(
@@ -76,7 +87,6 @@ export default {
                 return this.value
             },
             set(value) {
-                this.newRule = this.initializeRuleObject();
                 this.$refs.form.reset();
                 this.$emit('input', value);
             }
@@ -87,7 +97,15 @@ export default {
         return {
             newRule: this.initializeRuleObject(),
             newRuleDialog: false,
-            valid: true
+            valid: true,
+            integerRules: [
+                (v) => {
+                    if (isNaN(v) || !Number.isInteger(v)) {
+                        return "Integer numbers only!";
+                    }
+                    return true;
+                }
+            ],
         }
     }
 }
