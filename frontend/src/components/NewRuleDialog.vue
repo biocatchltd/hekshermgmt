@@ -14,10 +14,11 @@
                     </v-row>
                     <v-row>
                         <v-col>
-                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-if="setting.type == 'int'" :rules="integerRules" />
-                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-else-if="setting.type == 'float'" />
-                            <v-switch required v-model="newRule.value" label="Value" v-else-if="setting.type == 'bool'" />
-                            <v-text-field required outlined v-model="newRule.value" label="Value" type="text" v-else-if="setting.type == 'str'" />
+                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-if="settingType == 'int'" :rules="integerRules" />
+                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-else-if="settingType == 'float'" />
+                            <v-switch required v-model="newRule.value" label="Value" v-else-if="settingType == 'bool'" />
+                            <v-text-field required outlined v-model="newRule.value" label="Value" type="text" v-else-if="settingType == 'str'" />
+                            <v-select v-else-if="['Enum', 'Flags'].includes(settingType)" :items="settingOptions" :multiple="'Flags' == settingType" />
                         </v-col>
                     </v-row>
                     <v-row>
@@ -82,6 +83,23 @@ export default {
         }
     },
     computed: {
+        settingType() {
+            if (['str', 'bool', 'float', 'int'].includes(this.setting.type)) {
+                return this.setting.type;
+            }
+            if (this.setting.type.startsWith("Enum")) {
+                return "Enum";
+            }
+            if (this.setting.type.startsWith("Flags")) {
+                return "Flags";
+            }
+            return "error";
+        },
+        settingOptions() {
+            let settingType = this.setting.type
+            // Flags and Enums options are parsable using JSON, so we remove the Flags/Enum part and just parse it
+            return JSON.parse(settingType.slice(settingType.indexOf("[")));
+        },
         show: {
             get() {
                 return this.value
