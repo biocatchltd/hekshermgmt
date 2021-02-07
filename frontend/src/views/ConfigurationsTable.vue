@@ -19,7 +19,8 @@
 import SettingsRule from '../components/SettingRules.vue'
 export default {
     components: {SettingsRule},
-    methods: {},
+    methods: {
+    },
     data() {
         return {
             expanded: [],
