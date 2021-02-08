@@ -21,7 +21,20 @@ export default {
     components: {
         SettingsRule
     },
-    methods: {},
+    methods: {
+        async getSettings() {
+            try {
+                var response = await this.$http.get("/api/v1/settings")
+            } catch (error) {
+                this.$toast.error(error);
+                return;
+            }
+            this.configurations = response.data;
+        }
+    },
+    async mounted() {
+        await this.getSettings();
+    },
     data() {
         return {
             expanded: [],
@@ -40,149 +53,10 @@ export default {
                 },
                 {
                     text: 'Description',
-                    value: 'metadata.description'
+                    value: 'description'
                 },
             ],
-            configurations: [{
-                    "name": "cake_color",
-                    "configurable_features": [
-                        "env"
-                    ],
-                    "type": "Flags[\"blue\",\"green\",\"red\"]",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_cooking_temp",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "int",
-                    "default_value": 30,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_frosting",
-                    "configurable_features": [
-                        "service",
-                        "env",
-                        "cid"
-                    ],
-                    "type": "Sequence<Enum[\"candies\",\"sprinkles\"]>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_interest_rate",
-                    "configurable_features": [
-                        "env"
-                    ],
-                    "type": "float",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_name",
-                    "configurable_features": [
-                        "env"
-                    ],
-                    "type": "str",
-                    "default_value": "benben",
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_mapping_bool",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Mapping<bool>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_mapping_float",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Mapping<float>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_mapping_int",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Mapping<int>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_mapping_str",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Mapping<str>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_sequence_bool",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Sequence<bool>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_sequence_float",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Sequence<float>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_sequence_int",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Sequence<int>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_test_sequence_str",
-                    "configurable_features": [
-                        "service"
-                    ],
-                    "type": "Sequence<str>",
-                    "default_value": null,
-                    "metadata": {}
-                },
-                {
-                    "name": "cake_type",
-                    "configurable_features": [
-                        "cid"
-                    ],
-                    "type": "Enum[0,1,2]",
-                    "default_value": 2,
-                    "metadata": {}
-                },
-                {
-                    "name": "is_cake_enabled",
-                    "configurable_features": [
-                        "service",
-                        "env",
-                        "cid"
-                    ],
-                    "type": "bool",
-                    "default_value": false,
-                    "metadata": {}
-                }
-            ]
+            configurations: []
         }
     },
 }

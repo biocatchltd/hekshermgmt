@@ -7,6 +7,12 @@ authors = ["Aviram Hassan <aviram.hassan@biocatch.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 fastapi = "^0.63.0"
+aiologstash = "^2.0.0"
+envolved = "0.3.0"
+sentry-sdk = "^0.19.5"
+httpx = "^0.16.1"
+contextfilter = "^0.3.0"
+uvicorn = {version = "^0.13.3", extras = ["standard"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
