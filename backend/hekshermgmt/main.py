@@ -1,3 +1,4 @@
+from starlette.responses import JSONResponse
 from starlette.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,29 +8,40 @@ from hekshermgmt.api.v1 import router as v1_router
 
 middleware = []
 if __debug__:
-    middleware.append(Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=["*"], allow_headers=["*"]))
-app = HeksherManagement(title="HeksherManagement", version=__version__ or "0.0.1", middleware=middleware)
+    middleware.append(
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    )
+app = HeksherManagement(
+    title="HeksherManagement", version=__version__ or "0.0.1", middleware=middleware
+)
 
 app.include_router(v1_router)
 
-@app.on_event('startup')
+
+@app.on_event("startup")
 async def startup():
     await app.startup()
 
 
-@app.on_event('shutdown')
+@app.on_event("shutdown")
 async def shutdown():
     await app.shutdown()
 
-@app.get('/api/health')
+
+@app.get("/api/health")
 async def health_check():
     """
     Check the health of the connections to the service
     """
     is_healthy = await app.is_healthy()
     if not is_healthy:
-        return JSONResponse({'version': __version__}, status_code=500)
-    return {'version': __version__}
+        return JSONResponse({"version": __version__}, status_code=500)
+    return {"version": __version__}
 
 
 def main():

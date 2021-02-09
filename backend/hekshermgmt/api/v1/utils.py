@@ -1,4 +1,4 @@
-from fastapi import Depends, Request, Header, HTTPException
+from fastapi import Depends, Request, Header
 
 from hekshermgmt.context_vars import user
 
@@ -9,6 +9,7 @@ def application(request: Request):
     A helper dependancy to get the app instance
     """
     return request.app
+
 
 @Depends
 async def get_user_name(x_forwarded_email: str = Header(...)) -> str:
