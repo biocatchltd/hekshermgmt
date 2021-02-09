@@ -9,7 +9,7 @@
                 <v-container>
                     <v-row>
                         <v-col v-for="context in setting.configurable_features" :key="context">
-                            <v-text-field :label="context" v-model="newRule['context_features'][context]" outlined :rules="[() => /^[a-z0-9]+$/i.test(newRule['context_features'][context]) || 'Alphanumeric only!']" />
+                            <v-text-field :label="context" v-model="newRule['feature_values'][context]" outlined :rules="[(v) => /^[a-z0-9]+$/i.test(v) || 'Alphanumeric only!']" />
                         </v-col>
                     </v-row>
                     <v-row>
@@ -18,13 +18,13 @@
                             <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-else-if="settingType == 'float'" />
                             <v-switch required v-model="newRule.value" label="Value" v-else-if="settingType == 'bool'" />
                             <v-text-field required outlined v-model="newRule.value" label="Value" type="text" v-else-if="settingType == 'str'" />
-                            <v-select v-else-if="['Enum', 'Flags'].includes(settingType)" :items="settingOptions" :multiple="'Flags' == settingType" />
+                            <v-select v-else-if="['Enum', 'Flags'].includes(settingType)" v-model="newRule.value" :items="settingOptions" :multiple="'Flags' == settingType" />
                             <v-textarea v-else v-model="newRule.value" label="Complex value type, use JSON for inserting value." auto-grow/>
                         </v-col>
                     </v-row>
                     <v-row>
                         <v-col>
-                            <v-text-field label="Information" v-model="newRule.metadata.information" outlined />
+                            <v-text-field label="Information" v-model="newRule.information" outlined />
                         </v-col>
                     </v-row>
                 </v-container>
@@ -49,45 +49,52 @@ export default {
     methods: {
         async saveNewRule() {
             this.$refs.form.validate();
-            var contextFeatureFound = false;
-            for (const value of Object.values(this.newRule.context_features)) {
+            var featureValueFound = false;
+            for (const value of Object.values(this.newRule.feature_values)) {
                 if (value !== null) {
-                    contextFeatureFound = true;
+                    featureValueFound = true;
                     break;
                 }
             }
-            if (!contextFeatureFound) {
+            if (!featureValueFound) {
                 this.$toast.error("Atleast one context feature must be configured.")
                 return;
             }
             if (!this.valid) {
                 return;
             }
+            var rule = JSON.parse(JSON.stringify(this.newRule))
             if (["Sequence", "Mapping"].includes(this.settingType)) {
                 try {
-                    this.newRule.value = JSON.parse(this.newRule.value);
+                    rule.value = JSON.parse(this.newRule.value);
                 } catch (err) {
                     this.$toast.error("JSON Parse error " + err);
                     return;
                 }
             }
+            var feature_values = rule.feature_values
+            for (var propName in feature_values) {
+                if (feature_values[propName] === null || feature_values[propName] === undefined) {
+                delete feature_values[propName];
+                }
+            }
+            try {
+                await this.$http.post("/api/v1/rule", rule);
+            } catch (error) {
+                this.$toast.error(`${error.response.status} ${error.response.data}`);
+                return;
+            }
             this.$emit('rule-saved');
-            console.log(this.newRule);
             this.show = false;
         },
         initializeRuleObject() {
-            let rule = {
-                metadata: {
-                    information: ""
-                }
-
-            };
+            let rule = {setting: this.setting.name};
             let contextFeatures = this.setting.configurable_features.reduce(
                 function (obj, currentValue) {
                     obj[currentValue] = null;
                     return obj;
                 }, {})
-            rule["context_features"] = contextFeatures;
+            rule.feature_values = contextFeatures;
             return rule
         }
     },

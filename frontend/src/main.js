@@ -6,6 +6,9 @@ import vuetify from './plugins/vuetify';
 import VueConfirmDialog from 'vue-confirm-dialog'
 
 Vue.prototype.$http = axios
+Vue.prototype.$http.defaults.validateStatus = (status) => {
+  return (status >= 200) && (status < 300)
+};
 if (process.env.NODE_ENV == 'development') {
   Vue.prototype.$http.defaults.baseURL = 'http://localhost:8000';
   // The backend API requires X-Forwarded-Email header for all APIs

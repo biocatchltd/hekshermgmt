@@ -7,7 +7,7 @@
         <v-btn color=green @click.prevent="newRuleDialog=true">
             <v-icon>mdi-plus</v-icon>
         </v-btn>
-        <new-rule-dialog v-on:rule-saved="onNewRule" v-model="newRuleDialog" :setting="setting"/>
+        <new-rule-dialog v-on:rule-saved="onNewRule" v-model="newRuleDialog" :setting="setting" />
     </v-card-title>
     <v-card>
 
@@ -26,7 +26,9 @@
 import NewRuleDialog from './NewRuleDialog.vue';
 
 export default {
-    components: {NewRuleDialog},
+    components: {
+        NewRuleDialog
+    },
     methods: {
         async deleteConfirmDialog(rule) {
             this.$confirm({
@@ -43,15 +45,29 @@ export default {
             })
         },
         async deleteRule(rule) {
-            //TODO: add api logic
+            try {
+                await this.$http.delete(`/api/v1/rule/${rule.rule_id}`)
+            } catch (error) {
+                this.$toast.error(error);
+                return;
+            }
             let index = this.rules.indexOf(rule);
             this.rules.splice(index, 1);
         },
         closeNewDialog() {
             this.newRuleDialog = false;
         },
-        onNewRule() {
-            console.log("refresh rules..");
+        async onNewRule() {
+            await this.getRules();
+        },
+        async getRules() {
+            try {
+                var response = await this.$http.get(`/api/v1/settings/${this.setting.name}/rules`)
+            } catch (error) {
+                this.$toast.error(error);
+                return;
+            }
+            this.rules = response.data;
         }
     },
     computed: {
@@ -69,13 +85,13 @@ export default {
                 value: "value"
             }, {
                 text: "Added by",
-                value: "metadata.addedBy"
+                value: "added_by"
             }, {
                 text: "Date added",
-                value: "metadata.date"
+                value: "date"
             }, {
-                text: "Information",
-                value: "metadata.information"
+            text: "Information",
+                value: "information"
             }, {
                 text: "Actions",
                 value: "actions"
@@ -84,33 +100,25 @@ export default {
         }
     },
     props: ['setting'],
+    async mounted() {
+        await this.getRules();
+    },
     data() {
         let newRule = {
             information: ""
 
         };
         let contextFeatures = this.setting.configurable_features.reduce(
-                function (obj, currentValue) {
-                    obj[currentValue] = null;
-                    return obj;
-                }, [])
+            function (obj, currentValue) {
+                obj[currentValue] = null;
+                return obj;
+            }, [])
         newRule[contextFeatures] = contextFeatures;
         return {
             newRule: {},
             newRuleDialog: false,
             search: "",
-            rules: [{
-                "value": "aviramcake",
-                "context_features": {
-                    "env": "notyourtoy"
-                },
-                "metadata": {
-                    "addedBy": "dudu topaz",
-                    "information": "rip",
-                    "date": "13/22/2022"
-                },
-                "rule_id": 1
-            }]
+            rules: []
         }
     }
 }

@@ -73,7 +73,8 @@ class HeksherClient:
         result = response.json()
         return result["rules"][setting_name]
 
-    async def add_rule(self, setting_name: str, feature_values: Dict[str, str], value: Any, metadata: Dict[str, Any]):
+    async def add_rule(self, setting_name: str, feature_values: Dict[str, str], value: Any,
+                       metadata: Dict[str, Any]) -> int:
         """
         Adds a new rule to Heksher.
         Args:
@@ -82,7 +83,7 @@ class HeksherClient:
             value - The output value in case of match.
             metadata - Additional data to store.
         Returns:
-            None
+            Rule ID.
         Raises:
             Can raise httpx.Error in case of error from server.
         """
@@ -94,3 +95,32 @@ class HeksherClient:
         }
         response = await self.http_client.post('/api/v1/rules', json=request_json)
         response.raise_for_status()
+        return response.json()["rule_id"]
+
+    async def delete_rule(self, rule_id: int) -> None:
+        """
+        Deletes a rule from Heksher based on rule_id.
+        Args:
+            rule_id - Identifier of rule to remove.
+        Returns:
+            None
+        Raises:
+            Can raise httpx.Error in case of error from server.
+        """
+        response = await self.http_client.delete(f'/api/v1/rules/{rule_id}')
+        response.raise_for_status()
+
+    async def get_rule_data(self, rule_id: int) -> Dict[str, Any]:
+        """
+        Gets rule's data
+        Args:
+            rule_id - Identifier of rule to fetch.
+        Returns:
+            Rule as dict
+        Raises:
+            Can raise httpx.Error in case of error from server.
+        """
+        response = await self.http_client.get(f'/api/v1/rules/{rule_id}')
+        response.raise_for_status()
+
+        return response.json()

@@ -13,6 +13,7 @@ sentry-sdk = "^0.19.5"
 httpx = "^0.16.1"
 contextfilter = "^0.3.0"
 uvicorn = {version = "^0.13.3", extras = ["standard"]}
+orjson = "^3.4.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
