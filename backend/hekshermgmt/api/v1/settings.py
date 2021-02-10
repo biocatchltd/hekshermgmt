@@ -17,7 +17,7 @@ logger = getLogger(__name__)
 class Setting(BaseModel):
     name: str = Field(description="The name of the setting")
     configurable_features: List[str] = Field(
-        description="A list of the context features the setting can be configured" " by"
+        description="A list of the context features the setting can be configured by"
     )
     type: str = Field(description="The type of the setting")
     default_value: Any = Field(description="The default value of the setting")
