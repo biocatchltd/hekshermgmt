@@ -7,7 +7,11 @@ import httpx
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, validator  # pytype: disable=import-error
 from starlette.responses import Response
-
+from starlette.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
 from hekshermgmt.app import HeksherManagement
 from hekshermgmt.api.v1.utils import application
 from hekshermgmt.context_vars import user
@@ -63,14 +67,20 @@ async def add_rule(rule: RuleAddInput, app: HeksherManagement = application):
     metadata = {
         "added_by": user.get(),
         "information": rule.information,
-        "date": str(datetime.datetime.now()),
+        "date": datetime.datetime.now().isoformat(),
     }
     try:
         rule_id = await app.heksher_client.add_rule(
             rule.setting, rule.feature_values, rule.value, metadata
         )
     except httpx.HTTPStatusError as exception:
-        return Response(exception.response.content, exception.response.status_code)
+        resp_status = exception.response.status_code
+        status_code = (
+            resp_status
+            if resp_status in (HTTP_400_BAD_REQUEST, HTTP_422_UNPROCESSABLE_ENTITY)
+            else HTTP_500_INTERNAL_SERVER_ERROR
+        )
+        return Response(exception.response.content, status_code)
     logger.info(
         "Added rule.",
         extra={

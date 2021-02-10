@@ -65,7 +65,7 @@ class HeksherManagement(FastAPI):
         await self.heksher_client.ping()
 
     async def shutdown(self):
-        pass
+        await self.heksher_client.close()
 
     async def is_healthy(self) -> bool:
         """

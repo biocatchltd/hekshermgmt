@@ -70,12 +70,12 @@ class HeksherClient:
         Raises:
             Can raise httpx.Error in case of error from server.
         """
-        request_json = {
+        request_data = {
             "setting_names": [setting_name],
             "context_features_options": "*",
             "include_metadata": True,
         }
-        response = await self.http_client.post("/api/v1/rules/query", json=request_json)
+        response = await self.http_client.post("/api/v1/rules/query", json=request_data)
         response.raise_for_status()
         result = response.json()
         return result["rules"][setting_name]
@@ -99,13 +99,13 @@ class HeksherClient:
         Raises:
             Can raise httpx.Error in case of error from server.
         """
-        request_json = {
+        request_data = {
             "setting": setting_name,
             "feature_values": feature_values,
             "value": value,
             "metadata": metadata,
         }
-        response = await self.http_client.post("/api/v1/rules", json=request_json)
+        response = await self.http_client.post("/api/v1/rules", json=request_data)
         response.raise_for_status()
         return response.json()["rule_id"]
 
@@ -136,3 +136,9 @@ class HeksherClient:
         response.raise_for_status()
 
         return response.json()
+
+    async def close(self) -> None:
+        """
+        Closes the HTTP client. Instance isn't usable afterwards.
+        """
+        await self.http_client.aclose()
