@@ -9,7 +9,7 @@
                 <v-container>
                     <v-row>
                         <v-col v-for="context in setting.configurable_features" :key="context">
-                            <v-text-field :label="context" v-model="newRule['feature_values'][context]" outlined :rules="[(v) => /^[a-z0-9]+$/i.test(v) || 'Alphanumeric only!']" />
+                            <v-text-field :label="context" v-model="newRule['feature_values'][context]" outlined :rules="[(v) => /^[a-z_0-9]+$/i.test(v) || 'Alphanumeric only!']" />
                         </v-col>
                     </v-row>
                     <v-row>
