@@ -39,7 +39,7 @@ export default {
                 },
                 callback: confirm => {
                     if (confirm) {
-                        this.deleteRule(rule);
+                        this.deleteRule(rule).then();
                     }
                 }
             })
