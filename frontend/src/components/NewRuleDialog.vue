@@ -2,7 +2,7 @@
 <v-dialog v-model="show" width="50%">
     <v-card>
         <v-card-title>
-            <span class="headline">New Rule</span>
+            <span class="headline">New Rule - {{setting.name}}</span>
         </v-card-title>
         <v-card-text>
             <v-form ref="form" v-model="valid">
