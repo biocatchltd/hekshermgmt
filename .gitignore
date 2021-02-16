@@ -3,3 +3,5 @@ node_modules
 .vscode
 backend/.env
 *__pycache__*
+backend/.coverage
+backend/coverage.xml
