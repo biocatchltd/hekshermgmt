@@ -1,17 +1,16 @@
-import sentry_sdk
 import re
+from logging import INFO, getLogger
 
-from logging import getLogger, INFO
-
+import sentry_sdk
 from aiologstash import create_tcp_handler
 from contextfilter import ContextVarFilter
 from envolved import EnvVar, Schema
 from envolved.parsers import CollectionParser
 from fastapi import FastAPI
 
-from hekshermgmt.heksher_client import HeksherClient
-from hekshermgmt.context_vars import user
 from hekshermgmt._version import __version__
+from hekshermgmt.context_vars import user
+from hekshermgmt.heksher_client import HeksherClient
 
 logger = getLogger(__name__)
 

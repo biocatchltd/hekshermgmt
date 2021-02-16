@@ -3,17 +3,12 @@ from logging import getLogger
 from typing import Any, Dict, Optional
 
 import httpx
-
 from fastapi import APIRouter
-from pydantic import BaseModel, Field, validator  # pytype: disable=import-error
-from starlette.responses import Response
-from starlette.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_422_UNPROCESSABLE_ENTITY,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-)
+from pydantic import (BaseModel, Field,  # pytype: disable=import-error
+                      validator)
+
+from hekshermgmt.api.v1.utils import application, httpx_error_to_response
 from hekshermgmt.app import HeksherManagement
-from hekshermgmt.api.v1.utils import application
 from hekshermgmt.context_vars import user
 
 router = APIRouter(prefix="/rule")
@@ -50,7 +45,11 @@ async def delete_rule(rule_id: int, app: HeksherManagement = application):
     """
     Deletes a specific rule
     """
-    rule = await app.heksher_client.get_rule_data(rule_id)
+    try:
+        rule = await app.heksher_client.get_rule_data(rule_id)
+    except httpx.HTTPStatusError as error:
+        logger.warning("Error from Heksher API when deleting rule.", exc_info=error)
+        return httpx_error_to_response(error)
     logger.info(
         "Deleting rule.",
         extra={
@@ -73,14 +72,9 @@ async def add_rule(rule: RuleAddInput, app: HeksherManagement = application):
         rule_id = await app.heksher_client.add_rule(
             rule.setting, rule.feature_values, rule.value, metadata
         )
-    except httpx.HTTPStatusError as exception:
-        resp_status = exception.response.status_code
-        status_code = (
-            resp_status
-            if resp_status in (HTTP_400_BAD_REQUEST, HTTP_422_UNPROCESSABLE_ENTITY)
-            else HTTP_500_INTERNAL_SERVER_ERROR
-        )
-        return Response(exception.response.content, status_code)
+    except httpx.HTTPStatusError as error:
+        logger.warning("Error from Heksher API when adding rule.", exc_info=error)
+        return httpx_error_to_response(error)
     logger.info(
         "Added rule.",
         extra={

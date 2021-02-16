@@ -3,11 +3,10 @@ from __future__ import annotations
 import re
 from logging import getLogger
 from typing import Any, Dict, List, Optional
-from httpx import AsyncClient
 
 from envolved import EnvVar, Schema
 from envolved.parsers import CollectionParser
-
+from httpx import AsyncClient
 
 logger = getLogger(__name__)
 

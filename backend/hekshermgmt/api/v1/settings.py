@@ -1,13 +1,13 @@
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
+import httpx
 import orjson
-
 from fastapi import APIRouter
 from pydantic import BaseModel, Field  # pytype: disable=import-error
 
+from hekshermgmt.api.v1.utils import application, httpx_error_to_response
 from hekshermgmt.app import HeksherManagement
-from hekshermgmt.api.v1.utils import application
 
 router = APIRouter(prefix="/settings")
 
@@ -45,7 +45,11 @@ async def get_settings(app: HeksherManagement = application):
     Get settings list
     """
     logger.debug("Getting settings request.")
-    settings = await app.heksher_client.get_settings()
+    try:
+        settings = await app.heksher_client.get_settings()
+    except httpx.HTTPStatusError as error:
+        logger.warning("Error from Heksher API when fetching settings.", exc_info=error)
+        return httpx_error_to_response(error)
     return [
         Setting(
             name=setting["name"],

@@ -1,10 +1,10 @@
-from starlette.responses import JSONResponse
-from starlette.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware
+from starlette.responses import JSONResponse
 
 from hekshermgmt._version import __version__
-from hekshermgmt.app import HeksherManagement
 from hekshermgmt.api.v1 import router as v1_router
+from hekshermgmt.app import HeksherManagement
 
 middleware = []
 if __debug__:

@@ -1,2 +1,2 @@
 #!/bin/sh
-python -m pytest tests -s -x --cov=app --cov-report=xml --cov-report=term-missing
+poetry run pytest tests -s -x --cov=hekshermgmt --cov-report=xml --cov-report=term-missing
