@@ -101,7 +101,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 
 [[package]]
 name = "docker"
-version = "4.4.1"
+version = "4.4.2"
 description = "A Python library for the Docker Engine API."
 category = "dev"
 optional = false
@@ -166,7 +166,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "heksher"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 category = "dev"
 optional = false
@@ -436,7 +436,7 @@ python-versions = "*"
 
 [[package]]
 name = "pytype"
-version = "2021.1.28"
+version = "2021.2.9"
 description = "Python type inferencer"
 category = "dev"
 optional = false
@@ -627,11 +627,16 @@ standard = ["websockets (>=8.0.0,<9.0.0)", "watchgod (>=0.6,<0.7)", "python-dote
 
 [[package]]
 name = "uvloop"
-version = "0.14.0"
+version = "0.15.1"
 description = "Fast implementation of asyncio event loop on top of libuv"
 category = "main"
 optional = false
 python-versions = "*"
+
+[package.extras]
+dev = ["Cython (>=0.29.20,<0.30.0)", "pytest (>=3.6.0)", "Sphinx (>=1.7.3,<1.8.0)", "sphinxcontrib-asyncio (>=0.2.0,<0.3.0)", "sphinx-rtd-theme (>=0.2.4,<0.3.0)", "aiohttp", "flake8 (>=3.8.4,<3.9.0)", "psutil", "pycodestyle (>=2.6.0,<2.7.0)", "pyOpenSSL (>=19.0.0,<19.1.0)", "mypy (>=0.800)"]
+docs = ["Sphinx (>=1.7.3,<1.8.0)", "sphinxcontrib-asyncio (>=0.2.0,<0.3.0)", "sphinx-rtd-theme (>=0.2.4,<0.3.0)"]
+test = ["aiohttp", "flake8 (>=3.8.4,<3.9.0)", "psutil", "pycodestyle (>=2.6.0,<2.7.0)", "pyOpenSSL (>=19.0.0,<19.1.0)", "mypy (>=0.800)"]
 
 [[package]]
 name = "watchgod"
@@ -788,8 +793,8 @@ decorator = [
     {file = "decorator-4.4.2.tar.gz", hash = "sha256:e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7"},
 ]
 docker = [
-    {file = "docker-4.4.1-py2.py3-none-any.whl", hash = "sha256:e455fa49aabd4f22da9f4e1c1f9d16308286adc60abaf64bf3e1feafaed81d06"},
-    {file = "docker-4.4.1.tar.gz", hash = "sha256:0604a74719d5d2de438753934b755bfcda6f62f49b8e4b30969a4b0a2a8a1220"},
+    {file = "docker-4.4.2-py2.py3-none-any.whl", hash = "sha256:20d71afc593486f2297bb7fb7406b03876f31894337e914a5062050c65085cab"},
+    {file = "docker-4.4.2.tar.gz", hash = "sha256:67f33d4cf95182db631a17eef7d666d2c91f624c1d3fbc4df6009cb2f2a4c604"},
 ]
 envolved = [
     {file = "envolved-0.3.0-py3-none-any.whl", hash = "sha256:cb7709b13de28061b294b08bba2dc21ca8a3fc06cab198f2a16d45ccf3a262ca"},
@@ -808,8 +813,8 @@ h11 = [
     {file = "h11-0.12.0.tar.gz", hash = "sha256:47222cb6067e4a307d535814917cd98fd0a57b6788ce715755fa2b6c28b56042"},
 ]
 heksher = [
-    {file = "heksher-0.1.0-py3-none-any.whl", hash = "sha256:9a106fd009d96f5b900c618da1f59dd3d64f609effbc37ebf011bf3d8b71a5b8"},
-    {file = "heksher-0.1.0.tar.gz", hash = "sha256:bf6cd03d73b26618b2598112890fc26948655c9a637eb7f543d5317c841c4656"},
+    {file = "heksher-0.1.1-py3-none-any.whl", hash = "sha256:486c86d4b1adc4fbf7892503822dc0902f735593f5aefd2c35e29c0d6dc86cca"},
+    {file = "heksher-0.1.1.tar.gz", hash = "sha256:9d6e94d96168d72bbcef9d0302a5d07d2d9129350ce1aa9d669a22998f961786"},
 ]
 httpcore = [
     {file = "httpcore-0.12.3-py3-none-any.whl", hash = "sha256:93e822cd16c32016b414b789aeff4e855d0ccbfc51df563ee34d4dbadbb3bcdc"},
@@ -969,13 +974,13 @@ python-logstash = [
     {file = "python-logstash-0.4.6.tar.gz", hash = "sha256:10943e5df83f592b4d61b63ad1afff855ccc8c9467f78718f0a59809ba1fe68c"},
 ]
 pytype = [
-    {file = "pytype-2021.1.28-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:be764b1a8e8bc77aaee6b665302614435c00256c9914423c7cb0db8345502f7b"},
-    {file = "pytype-2021.1.28-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:76fd1c8c9677596463f4f06a7b78726caccf1a4cf793d3afb08465800e4015af"},
-    {file = "pytype-2021.1.28-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:df0b1a002fa92b20978a3ec8f09be9e92c64cfdeb9798399d25cf8b90cb6e80a"},
-    {file = "pytype-2021.1.28-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:5121cf6a5439a875fcb8dd4b7847c556767f0bb495c75e091069dd2b20121d41"},
-    {file = "pytype-2021.1.28-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:fc00cbd1c186ac536f444c2e743d650e59e05011a532266d778b544736cf4da3"},
-    {file = "pytype-2021.1.28-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:fa805000a3d09c5cbc85d2fc6ed9e0c5dcac19d63658604ebb7771526bf8160b"},
-    {file = "pytype-2021.1.28.tar.gz", hash = "sha256:69ffaf8ffdb29cfa69aec8c1bbdc6052a8ab87f24278635884f61253a21c7a90"},
+    {file = "pytype-2021.2.9-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:f12c5760a15ef9e25897d98fb2dd7f779ea336fba5f946be9579cfbf4267aeb4"},
+    {file = "pytype-2021.2.9-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:72963e7053dbab7aec4aa31dbd5092a316268fa29191af4d174c603ad6feb5be"},
+    {file = "pytype-2021.2.9-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:37730cbc20799c46dfcb68e8692a22aa4b12fe429e97707773cc3045fd4d1729"},
+    {file = "pytype-2021.2.9-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:87dd1afad8c5126562d388b9ad761331b12e1b80aba0a144ec229243c6e95bd9"},
+    {file = "pytype-2021.2.9-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:f0dec3da27e6e1502ddafb118d8d699866abf8e6c9cc581551e10808179ff55c"},
+    {file = "pytype-2021.2.9-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:6527d82bc4101bec0e4f70b492f6812bac91b39474819a926f2e740f6e3cbb23"},
+    {file = "pytype-2021.2.9.tar.gz", hash = "sha256:e248ed107a4ec6e3b04d1bfdffab8d4d5c7c7aceed92e8b6c5240de0e2fa6dac"},
 ]
 pywin32 = [
     {file = "pywin32-227-cp27-cp27m-win32.whl", hash = "sha256:371fcc39416d736401f0274dd64c2302728c9e034808e37381b5e1b22be4a6b0"},
@@ -1123,15 +1128,16 @@ uvicorn = [
     {file = "uvicorn-0.13.3.tar.gz", hash = "sha256:ef1e0bb5f7941c6fe324e06443ddac0331e1632a776175f87891c7bd02694355"},
 ]
 uvloop = [
-    {file = "uvloop-0.14.0-cp35-cp35m-macosx_10_11_x86_64.whl", hash = "sha256:08b109f0213af392150e2fe6f81d33261bb5ce968a288eb698aad4f46eb711bd"},
-    {file = "uvloop-0.14.0-cp35-cp35m-manylinux2010_x86_64.whl", hash = "sha256:4544dcf77d74f3a84f03dd6278174575c44c67d7165d4c42c71db3fdc3860726"},
-    {file = "uvloop-0.14.0-cp36-cp36m-macosx_10_11_x86_64.whl", hash = "sha256:b4f591aa4b3fa7f32fb51e2ee9fea1b495eb75b0b3c8d0ca52514ad675ae63f7"},
-    {file = "uvloop-0.14.0-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:f07909cd9fc08c52d294b1570bba92186181ca01fe3dc9ffba68955273dd7362"},
-    {file = "uvloop-0.14.0-cp37-cp37m-macosx_10_11_x86_64.whl", hash = "sha256:afd5513c0ae414ec71d24f6f123614a80f3d27ca655a4fcf6cabe50994cc1891"},
-    {file = "uvloop-0.14.0-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:e7514d7a48c063226b7d06617cbb12a14278d4323a065a8d46a7962686ce2e95"},
-    {file = "uvloop-0.14.0-cp38-cp38-macosx_10_11_x86_64.whl", hash = "sha256:bcac356d62edd330080aed082e78d4b580ff260a677508718f88016333e2c9c5"},
-    {file = "uvloop-0.14.0-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:4315d2ec3ca393dd5bc0b0089d23101276778c304d42faff5dc4579cb6caef09"},
-    {file = "uvloop-0.14.0.tar.gz", hash = "sha256:123ac9c0c7dd71464f58f1b4ee0bbd81285d96cdda8bc3519281b8973e3a461e"},
+    {file = "uvloop-0.15.1-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:9541dc3f391941796ae95c9c3bb16b813acf9e3d4beebfd3b623f1acb22d318d"},
+    {file = "uvloop-0.15.1-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:e178c255622d928d464187e3ceba94db88465f6b17909c651483fb73af8d8b85"},
+    {file = "uvloop-0.15.1-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:47ec567151070ed770211d359ad9250b59368548c60212c7ef6dda3f5b1778f6"},
+    {file = "uvloop-0.15.1-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:66881fe8a2187334c4dd5010c56310bdf32fe426613f9ca727f090bc31280624"},
+    {file = "uvloop-0.15.1-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:e72779681f839b6a069d7e7a9f7962a1d1927612c5c2e33071415478bdc1b91b"},
+    {file = "uvloop-0.15.1-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:ed073d24e0c383c24d17d3a2bb209b999ff0a8130e89b7c3f033db9e0c3bd04f"},
+    {file = "uvloop-0.15.1-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:236a3c31096e0845029856f7bc07a938340c2cdb35d9d39b38c9253b672bf948"},
+    {file = "uvloop-0.15.1-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:ca8a9e982f0bfbe331f41902cdd721c6e749e4685a403685e792b86a584f5969"},
+    {file = "uvloop-0.15.1-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:1ae1ad731c8c0dcee80e0ecf06274f0f7293244d2cef81fa2747321a370a6aba"},
+    {file = "uvloop-0.15.1.tar.gz", hash = "sha256:7846828112bfb49abc5fdfc47d0e4dfd7402115c9fde3c14c31818cfbeeb63dc"},
 ]
 watchgod = [
     {file = "watchgod-0.6-py35.py36.py37-none-any.whl", hash = "sha256:59700dab7445aa8e6067a5b94f37bae90fc367554549b1ed2e9d0f4f38a90d2a"},
