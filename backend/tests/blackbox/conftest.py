@@ -1,17 +1,17 @@
 from functools import partial
 from typing import Optional, Sequence
-import heksher
-from heksher.heksher_client import TemporaryClient
 
+import heksher
 import httpx
 from docker import DockerClient
+from heksher import ThreadHeksherClient
+from heksher.heksher_client import TemporaryClient
 from pytest import fixture
 from starlette.testclient import TestClient
-from yellowbox import SingleContainerService, connect, retry, temp_network
+from yellowbox import SingleContainerService, connect, temp_network
 from yellowbox.containers import create_and_pull, get_ports, killing
 from yellowbox.extras.postgresql import PostgreSQLService
 from yellowbox.retry import RetrySpec
-from heksher import ThreadHeksherClient
 
 from hekshermgmt.main import app
 
@@ -32,7 +32,7 @@ class HeksherService(SingleContainerService):
         super().__init__(
             create_and_pull(
                 docker_client,
-                "biocatchltd/heksher:0.2.0",
+                "biocatchltd/heksher:0.2.2",
                 detach=True,
                 publish_all_ports=True,
                 environment={
