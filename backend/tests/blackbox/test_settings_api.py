@@ -1,12 +1,7 @@
-import string
-import random
-
-from pytest import fixture
 from heksher import Setting, ThreadHeksherClient
 
 
-def generate_setting_name() -> str:
-    return "".join(random.choice(string.ascii_letters) for i in range(10))
+from utils import generate_setting_name
 
 
 def test_get_settings(app_client, heksher_client: ThreadHeksherClient):
