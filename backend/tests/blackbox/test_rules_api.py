@@ -66,11 +66,15 @@ def test_rule_delete_error(app_client):
     response = app_client.delete("/api/v1/rule/30")
     assert response.status_code == 404
 
+
 def test_rule_add_error(app_client):
-    response = app_client.post("/api/v1/rule", json={
-        "value": 1,
-        "feature_values": {"user": "pita"},
-        "setting": "idon'texist",
-        "information": "llll"
-    })
+    response = app_client.post(
+        "/api/v1/rule",
+        json={
+            "value": 1,
+            "feature_values": {"user": "pita"},
+            "setting": "idon'texist",
+            "information": "llll",
+        },
+    )
     assert response.status_code == 422

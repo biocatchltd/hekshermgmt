@@ -4,8 +4,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 from fastapi import APIRouter
-from pydantic import (BaseModel, Field,  # pytype: disable=import-error
-                      validator)
+from pydantic import BaseModel, Field, validator  # pytype: disable=import-error
 
 from hekshermgmt.api.v1.utils import application, httpx_error_to_response
 from hekshermgmt.app import HeksherManagement
