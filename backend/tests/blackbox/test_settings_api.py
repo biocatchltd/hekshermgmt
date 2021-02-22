@@ -13,14 +13,14 @@ def test_get_settings(app_client, heksher_client: ThreadHeksherClient):
     setting_default_value_str = "just dance, gonna be alright!"
     setting_features_str = ["user", "theme"]
 
-    int_setting = Setting(
+    Setting(
         setting_name_int,
         int,
         setting_features_int,
         setting_default_value_int,
         metadata={"description": setting_description_int},
     )
-    str_setting = Setting(
+    Setting(
         setting_name_str,
         str,
         setting_features_str,
@@ -55,7 +55,7 @@ def test_get_settings_rules(app_client, heksher_client: ThreadHeksherClient):
     setting_description = "me control cake temp"
     setting_default_value = 5
     setting_features = ["user", "theme"]
-    int_setting = Setting(
+    Setting(
         setting_name,
         int,
         setting_features,

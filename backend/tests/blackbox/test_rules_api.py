@@ -1,4 +1,3 @@
-import time
 from heksher import TRACK_ALL, Setting, ThreadHeksherClient
 
 from utils import generate_setting_name
