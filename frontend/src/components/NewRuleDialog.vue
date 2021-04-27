@@ -14,12 +14,7 @@
                     </v-row>
                     <v-row>
                         <v-col>
-                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-if="settingType == 'int'" :rules="integerRules" />
-                            <v-text-field required outlined v-model.number="newRule.value" label="Value" type="number" v-else-if="settingType == 'float'" />
-                            <v-switch required v-model="newRule.value" label="Value" v-else-if="settingType == 'bool'" />
-                            <v-text-field required outlined v-model="newRule.value" label="Value" type="text" v-else-if="settingType == 'str'" />
-                            <v-select v-else-if="['Enum', 'Flags'].includes(settingType)" v-model="newRule.value" :items="settingOptions" :multiple="'Flags' == settingType" />
-                            <v-textarea v-else v-model="newRule.value" label="Complex value type, use JSON for inserting value." auto-grow/>
+                            <rule-value v-model="RuleValue" :setting-type="setting.type" rule_value="" />
                         </v-col>
                     </v-row>
                     <v-row>
@@ -44,8 +39,12 @@
 </template>
 
 <script>
+import RuleValue from "./RuleValue";
+
 export default {
-    components: {},
+    components: {
+      RuleValue
+    },
     methods: {
         async saveNewRule() {
             this.$refs.form.validate();
@@ -57,7 +56,7 @@ export default {
                 }
             }
             if (!featureValueFound) {
-                this.$toast.error("Atleast one context feature must be configured.")
+                this.$toast.error("At least one context feature must be configured.")
                 return;
             }
             if (!this.valid) {
@@ -72,8 +71,8 @@ export default {
                     return;
                 }
             }
-            var feature_values = rule.feature_values
-            for (var propName in feature_values) {
+            const feature_values = rule.feature_values
+            for (const propName in feature_values) {
                 if (feature_values[propName] === null || feature_values[propName] === undefined) {
                 delete feature_values[propName];
                 }
@@ -99,29 +98,6 @@ export default {
         }
     },
     computed: {
-        settingType() {
-            if (['str', 'bool', 'float', 'int'].includes(this.setting.type)) {
-                return this.setting.type;
-            }
-            else if (this.setting.type.startsWith("Enum")) {
-                return "Enum";
-            }
-            else if (this.setting.type.startsWith("Flags")) {
-                return "Flags";
-            }
-            else if (this.setting.type.startsWith("Sequence")) {
-                return "Sequence";
-            }
-            else if (this.setting.type.startsWith("Mapping")) {
-                return "Mapping";
-            }
-            return "error";
-        },
-        settingOptions() {
-            let settingType = this.setting.type
-            // Flags and Enums options are parsable using JSON, so we remove the Flags/Enum part and just parse it
-            return JSON.parse(settingType.slice(settingType.indexOf("[")));
-        },
         show: {
             get() {
                 return this.value
@@ -138,6 +114,7 @@ export default {
             newRule: this.initializeRuleObject(),
             newRuleDialog: false,
             valid: true,
+            RuleValue: null,
             integerRules: [
                 (v) => {
                     if (isNaN(v) || !Number.isInteger(v)) {
