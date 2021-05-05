@@ -2,7 +2,6 @@ from logging import getLogger
 from typing import Any, Dict, List, Optional
 
 import httpx
-import orjson
 from fastapi import APIRouter
 from pydantic import BaseModel, Field  # pytype: disable=import-error
 

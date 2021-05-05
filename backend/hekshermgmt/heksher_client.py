@@ -121,19 +121,19 @@ class HeksherClient:
         response = await self.http_client.delete(f"/api/v1/rules/{rule_id}")
         response.raise_for_status()
 
-    async def edit_rule(self, rule_id: int, new_value: Any) -> Any:
+    async def edit_rule(self, rule_id: int, value: Any) -> Any:
         """
         Change a Heksher rule's value
         Args:
             rule_id: identifier of the rule to edit
-            new_value: the new value of the rule
+            value: the new value of the rule
         Returns:
             None
         Raises:
             Can raise httpx.Error in case of error from server.
         """
         response = await self.http_client.patch(f'/api/v1/rules/{rule_id}', json={
-            'value': new_value
+            'value': value
         })
         response.raise_for_status()
 
