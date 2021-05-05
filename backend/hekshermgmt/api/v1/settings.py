@@ -73,7 +73,7 @@ async def get_setting_rules(setting_name: str, app: HeksherManagement = applicat
     # Convert dictionary values into JSON for easier view.
     return [
         Rule(
-            value=orjson.dumps(rule["value"])
+            value=rule["value"]
             if isinstance(rule["value"], dict)
             else rule["value"],
             context_features=dict(rule["context_features"]),

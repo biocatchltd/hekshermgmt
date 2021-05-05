@@ -80,11 +80,11 @@ class HeksherClient:
         return result["rules"][setting_name]
 
     async def add_rule(
-        self,
-        setting_name: str,
-        feature_values: Dict[str, str],
-        value: Any,
-        metadata: Dict[str, Any],
+            self,
+            setting_name: str,
+            feature_values: Dict[str, str],
+            value: Any,
+            metadata: Dict[str, Any],
     ) -> int:
         """
         Adds a new rule to Heksher.
@@ -119,6 +119,22 @@ class HeksherClient:
             Can raise httpx.Error in case of error from server.
         """
         response = await self.http_client.delete(f"/api/v1/rules/{rule_id}")
+        response.raise_for_status()
+
+    async def edit_rule(self, rule_id: int, new_value: Any) -> Any:
+        """
+        Change a Heksher rule's value
+        Args:
+            rule_id: identifier of the rule to edit
+            new_value: the new value of the rule
+        Returns:
+            None
+        Raises:
+            Can raise httpx.Error in case of error from server.
+        """
+        response = await self.http_client.patch(f'/api/v1/rules/{rule_id}', json={
+            'value': new_value
+        })
         response.raise_for_status()
 
     async def get_rule_data(self, rule_id: int) -> Dict[str, Any]:

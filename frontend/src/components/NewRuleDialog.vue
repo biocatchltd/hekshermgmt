@@ -6,15 +6,26 @@
         </v-card-title>
         <v-card-text>
             <v-form ref="form" v-model="valid">
-                <v-container>
+              <v-container>
                     <v-row>
                         <v-col v-for="context in setting.configurable_features" :key="context">
-                            <v-text-field :label="context" v-model="newRule['feature_values'][context]" outlined :rules="[(v) => /^[a-z_0-9]+$/i.test(v) || 'Alphanumeric only!']" />
+                            <v-text-field clearable :label="context" v-model="newRule['feature_values'][context]"
+                                          outlined :rules="[(v) => /^[a-z_0-9]+$/i.test(v) || 'Alphanumeric only!']" />
+                        </v-col>
+                        <v-col>
+                          <v-container>
+                            <v-btn color="primary" dark @click="clearContexts">
+                                Clear <br /> Contexts
+                                <v-icon dark right>
+                                  mdi-close
+                                </v-icon>
+                            </v-btn>
+                          </v-container>
                         </v-col>
                     </v-row>
                     <v-row>
                         <v-col>
-                            <rule-value v-model="RuleValue" :setting-type="setting.type" rule_value="" />
+                            <rule-value v-model="newRule.value" :setting-type="setting.type" :initial-value="setting.default_value" />
                         </v-col>
                     </v-row>
                     <v-row>
@@ -22,7 +33,7 @@
                             <v-text-field label="Information" v-model="newRule.information" outlined />
                         </v-col>
                     </v-row>
-                </v-container>
+              </v-container>
             </v-form>
         </v-card-text>
         <v-card-actions>
@@ -63,7 +74,7 @@ export default {
                 return;
             }
             var rule = JSON.parse(JSON.stringify(this.newRule))
-            if (["Sequence", "Mapping"].includes(this.settingType)) {
+            if (this.setting.type.startsWith("Sequence") || this.setting.type.startsWith("Mapping")) {
                 try {
                     rule.value = JSON.parse(this.newRule.value);
                 } catch (err) {
@@ -86,6 +97,9 @@ export default {
             this.$emit('rule-saved');
             this.show = false;
         },
+        clearContexts(){
+          this.newRule['feature_values'] = {};
+        },
         initializeRuleObject() {
             let rule = {setting: this.setting.name};
             let contextFeatures = this.setting.configurable_features.reduce(
@@ -94,6 +108,7 @@ export default {
                     return obj;
                 }, {})
             rule.feature_values = contextFeatures;
+            rule.value = null;
             return rule
         }
     },
@@ -103,7 +118,7 @@ export default {
                 return this.value
             },
             set(value) {
-                this.$refs.form.reset();
+                //this.$refs.form.reset();
                 this.$emit('input', value);
             }
         }
@@ -115,14 +130,6 @@ export default {
             newRuleDialog: false,
             valid: true,
             RuleValue: null,
-            integerRules: [
-                (v) => {
-                    if (isNaN(v) || !Number.isInteger(v)) {
-                        return "Integer numbers only!";
-                    }
-                    return true;
-                }
-            ],
         }
     }
 }
