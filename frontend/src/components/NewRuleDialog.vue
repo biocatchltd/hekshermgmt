@@ -128,7 +128,6 @@ export default {
             newRule: this.initializeRuleObject(),
             newRuleDialog: false,
             valid: true,
-            RuleValue: null,
         }
     }
 }

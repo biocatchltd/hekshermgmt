@@ -32,18 +32,18 @@ export default {
   components: {},
   methods: {
     resetValue() {
-      let init_val = this.initialValue;
+      let initialValue = this.initialValue;
       if (this.settingType.startsWith("Sequence") || this.settingType.startsWith("Mapping")) {
-        init_val = JSON.stringify(init_val)
+        initialValue = JSON.stringify(initialValue)
       }
-      this.value = init_val;
+      this.value = initialValue;
     },
     clearValue() {
-      let init_val = this.defaultValue;
+      let initialValue = this.defaultValue;
       if (this.settingType.startsWith("Sequence") || this.settingType.startsWith("Mapping")) {
-        init_val = JSON.stringify(init_val)
+        initialValue = JSON.stringify(initialValue)
       }
-      this.value = init_val;
+      this.value = initialValue;
     }
   },
   computed: {
@@ -78,13 +78,13 @@ export default {
   },
   props: ['settingType', 'initialValue', 'defaultValue'],
   data() {
-    let init_val = this.initialValue;
+    let initialValue = this.initialValue;
     if (this.settingType.startsWith("Sequence") || this.settingType.startsWith("Mapping")) {
-      init_val = JSON.stringify(init_val)
+      initialValue = JSON.stringify(initialValue)
     }
     return {
       valid: false,
-      inner_value: init_val,
+      inner_value: initialValue,
       integerRules: [
         (v) => {
           if (isNaN(v) || !Number.isInteger(v)) {

@@ -86,7 +86,6 @@ export default {
       changedRule: this.initializeRuleObject(),
       newRuleDialog: false,
       valid: true,
-      RuleValue: null,
     }
   }
 }
