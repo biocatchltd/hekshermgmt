@@ -84,3 +84,17 @@ async def add_rule(rule: RuleAddInput, app: HeksherManagement = application):
         },
     )
     return RuleAddOutput(rule_id=rule_id)
+
+
+class RuleEditInput(BaseModel):
+    value: Any = Field(description="the new value of the rule")
+
+
+@router.patch("/{rule_id}")
+async def edit_rule(rule_id: int, input_: RuleEditInput, app: HeksherManagement = application):
+    """Edit a specific rule"""
+    try:
+        await app.heksher_client.edit_rule(rule_id, input_.value)
+    except httpx.HTTPStatusError as error:
+        logger.warning("Error from Heksher API when patching rule.", exc_info=error)
+        return httpx_error_to_response(error)

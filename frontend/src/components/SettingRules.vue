@@ -7,13 +7,17 @@
         <v-btn color=green @click.prevent="newRuleDialog=true">
             <v-icon>mdi-plus</v-icon>
         </v-btn>
-        <new-rule-dialog v-on:rule-saved="onNewRule" v-model="newRuleDialog" :setting="setting" />
+        <new-rule-dialog v-on:rule-saved="onRuleChange" v-model="newRuleDialog" :setting="setting" />
     </v-card-title>
     <v-card>
-
     </v-card>
     <v-data-table :headers="headers" :items="rules" :search="search">
         <template v-slot:item.actions="{ item }">
+          <v-icon small @click.prevent="editRuleDialog=true">
+                mdi-pencil
+          </v-icon>
+          <edit-rule-dialog v-on:rule-saved="onRuleChange" v-model="editRuleDialog" :setting="setting" :rule="item"/>
+          <v-spacer/>
             <v-icon small @click="deleteConfirmDialog(item)">
                 mdi-delete
             </v-icon>
@@ -24,10 +28,12 @@
 
 <script>
 import NewRuleDialog from './NewRuleDialog.vue';
+import EditRuleDialog from './EditRuleDialog';
 
 export default {
     components: {
-        NewRuleDialog
+        NewRuleDialog,
+        EditRuleDialog
     },
     methods: {
         async deleteConfirmDialog(rule) {
@@ -57,7 +63,7 @@ export default {
         closeNewDialog() {
             this.newRuleDialog = false;
         },
-        async onNewRule() {
+        async onRuleChange() {
             await this.getRules();
         },
         async getRules() {
@@ -117,6 +123,7 @@ export default {
         return {
             newRule: {},
             newRuleDialog: false,
+            editRuleDialog: false,
             search: "",
             rules: []
         }
