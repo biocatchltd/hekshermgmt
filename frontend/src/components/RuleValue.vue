@@ -68,11 +68,11 @@ export default {
     },
     value: {
       get() {
-        return this.inner_value;
+        return this.innerValue;
       },
       set(value) {
         this.$emit('input', value);
-        this.inner_value = value;
+        this.innerValue = value;
       }
     }
   },
@@ -84,7 +84,7 @@ export default {
     }
     return {
       valid: false,
-      inner_value: initialValue,
+      innerValue: initialValue,
       integerRules: [
         (v) => {
           if (isNaN(v) || !Number.isInteger(v)) {
