@@ -1,3 +1,5 @@
+import re
+
 from heksher import Setting, ThreadHeksherClient
 
 from utils import generate_setting_name
@@ -102,3 +104,77 @@ def test_get_settings_rules(app_client, heksher_client: ThreadHeksherClient):
         assert rule.pop("added_by") == user
 
     assert result_rules == rules
+
+    for rule in rules:
+        app_client.delete(f'/api/v1/rule/{rule["rule_id"]}').raise_for_status()
+
+
+def test_csv_export(app_client, heksher_client: ThreadHeksherClient):
+    setting_name_1 = 'a' + generate_setting_name()
+    setting_description = "me control cake temp"
+    setting_default_value = 5
+    setting_features = ["user", "theme"]
+    Setting(
+        setting_name_1,
+        int,
+        setting_features,
+        setting_default_value,
+        metadata={"description": setting_description},
+    )
+    setting_name_2 = 'b' + generate_setting_name()
+    setting_description = "me control cake temp"
+    setting_default_value = 12
+    setting_features = ["trust", "theme"]
+    Setting(
+        setting_name_2,
+        int,
+        setting_features,
+        setting_default_value,
+        metadata={"description": setting_description},
+    )
+
+    heksher_client.reload()
+
+    rules = [
+        {
+            "value": 30,
+            "feature_values": {"user": "pita", "theme": "sabich"},
+            "setting": setting_name_1,
+            "information": "funfun",
+        },
+        {
+            "value": 1,
+            "feature_values": {"theme": "iraqish"},
+            "setting": setting_name_1,
+            "information": "funfun2",
+        },
+        {
+            "value": 2,
+            "feature_values": {"theme": "iraqish"},
+            "setting": setting_name_2,
+            "information": "funfun3",
+        },
+        {
+            "value": 11,
+            "feature_values": {"trust": "none"},
+            "setting": setting_name_2,
+            "information": "funfun4",
+        },
+    ]
+
+    for rule in rules:
+        response = app_client.post("/api/v1/rule", json=rule)
+        response.raise_for_status()
+
+    csv_resp = app_client.get('/api/v1/settings/export/csv')
+    csv_resp.raise_for_status()
+    csv = csv_resp.json()['csv']
+    csv, n = re.subn(',[T0-9:.-]+\r\n', ',$NOW$\r\n', csv)
+    assert n == 4
+    assert csv == (
+        'setting,user,trust,theme,value,added_by,information,date\r\n'
+        f'{setting_name_1},pita,,sabich,30,eyal@shani.pita,funfun,$NOW$\r\n'
+        f'{setting_name_1},,,iraqish,1,eyal@shani.pita,funfun2,$NOW$\r\n'
+        f'{setting_name_2},,,iraqish,2,eyal@shani.pita,funfun3,$NOW$\r\n'
+        f'{setting_name_2},,none,,11,eyal@shani.pita,funfun4,$NOW$\r\n'
+    )

@@ -1,8 +1,11 @@
+import csv
+from io import StringIO
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import APIRouter
+from fastapi.params import Query
 from pydantic import BaseModel, Field  # pytype: disable=import-error
 
 from hekshermgmt.api.v1.utils import application, httpx_error_to_response
@@ -67,7 +70,7 @@ async def get_setting_rules(setting_name: str, app: HeksherManagement = applicat
     Get setting's rules
     """
     logger.debug("Get setting's rules", extra={"setting_name": setting_name})
-    rules = await app.heksher_client.get_settings_rules(setting_name)
+    rules = await app.heksher_client.get_setting_rules(setting_name)
 
     # Convert dictionary values into JSON for easier view.
     return [
@@ -81,3 +84,31 @@ async def get_setting_rules(setting_name: str, app: HeksherManagement = applicat
         )
         for rule in rules
     ]
+
+
+class ExportCSVOutput(BaseModel):
+    csv: str = Field(description='The rules of all settings in CSV format')
+
+
+@router.get("/export/csv")
+async def export_to_csv(metadata_field: List[str] = Query(default=['added_by', 'information', 'date']),
+                        dialect: str = Query(default='excel'), app: HeksherManagement = application):
+    ret = StringIO(newline='')
+
+    # get all context features
+    context_features = await app.heksher_client.get_context_features()
+    field_names = ['setting', *context_features, 'value', *metadata_field]
+    writer = csv.DictWriter(ret, field_names, dialect=dialect, extrasaction='ignore')
+    writer.writeheader()
+
+    # get all settings
+    all_settings = await app.heksher_client.get_setting_names()
+
+    # get all rules for settings
+    all_rules = await app.heksher_client.get_settings_rules(all_settings)
+    for setting, ruleset in sorted(all_rules.items()):
+        for rule in ruleset:
+            row = {'setting': setting, 'value': rule['value'], **rule['metadata'], **dict(rule['context_features'])}
+            writer.writerow(row)
+
+    return ExportCSVOutput(csv=ret.getvalue())

@@ -39,6 +39,7 @@ class HeksherService(SingleContainerService):
                     "HEKSHER_DB_CONNECTION_STRING": db_connection_string,
                     "HEKSHER_STARTUP_CONTEXT_FEATURES": ";".join(context_features),
                 },
+                **kwargs
             )
         )
 
