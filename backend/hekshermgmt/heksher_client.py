@@ -59,7 +59,56 @@ class HeksherClient:
         result = response.json()
         return result["settings"]
 
-    async def get_settings_rules(self, setting_name: str) -> List[Dict[str, Any]]:
+    async def get_setting_names(self) -> List[str]:
+        """
+        Get all setting names in the Heksher system
+        Returns:
+            List of setting names.
+        Raises:
+            Can raise httpx.Error in case of error from server.
+        """
+        response = await self.http_client.get(
+            "/api/v1/settings", params={"include_additional_data": False}
+        )
+        response.raise_for_status()
+        result = response.json()
+        return [s['name'] for s in result["settings"]]
+
+    async def get_context_features(self) -> List[str]:
+        """
+        Get all context features of the heksher server
+        Args:
+            setting_names - Names of the settings
+        Returns:
+            List of context features
+        Raises:
+            Can raise httpx.Error in case of error from server.
+        """
+        resp = (await self.http_client.get('/api/v1/context_features/'))
+        resp.raise_for_status()
+        return resp.json()['context_features']
+
+    async def get_settings_rules(self, setting_names: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get rules of settings by name
+        Args:
+            setting_names - Names of the settings
+        Returns:
+            List of rules by setting name
+        Raises:
+            Can raise httpx.Error in case of error from server.
+        """
+        request_data = {
+            "setting_names": setting_names,
+            "context_features_options": "*",
+            "include_metadata": True,
+        }
+        response = await self.http_client.post("/api/v1/rules/query", json=request_data)
+        response.raise_for_status()
+        result = response.json()
+        return result["rules"]
+
+    async def get_setting_rules(self, setting_name: str) -> List[Dict[str, Any]]:
         """
         Get rules of a specific setting by name
         Args:
