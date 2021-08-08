@@ -166,7 +166,8 @@ def test_csv_export(app_client, heksher_client: ThreadHeksherClient):
     csv_resp = app_client.get('/api/v1/settings/export/csv')
     csv_resp.raise_for_status()
     csv = csv_resp.json()['csv']
-    csv = re.sub(',[T0-9:.-]+\r\n', ',$NOW$\r\n', csv, count=4)
+    csv, n = re.subn(',[T0-9:.-]+\r\n', ',$NOW$\r\n', csv)
+    assert n == 4
     assert csv == (
         'setting,user,trust,theme,value,added_by,information,date\r\n'
         f'{setting_name_1},pita,,sabich,30,eyal@shani.pita,funfun,$NOW$\r\n'
