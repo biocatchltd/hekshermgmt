@@ -109,7 +109,6 @@ def test_get_settings_rules(app_client, heksher_client: ThreadHeksherClient):
         app_client.delete(f'/api/v1/rule/{rule["rule_id"]}').raise_for_status()
 
 
-
 def test_csv_export(app_client, heksher_client: ThreadHeksherClient):
     setting_name_1 = 'a' + generate_setting_name()
     setting_description = "me control cake temp"
