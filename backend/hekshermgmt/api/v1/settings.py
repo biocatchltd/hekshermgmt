@@ -1,6 +1,5 @@
 import csv
 from io import StringIO
-from itertools import chain
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
@@ -113,4 +112,3 @@ async def export_to_csv(metadata_field: List[str] = Query(default=['added_by', '
             writer.writerow(row)
 
     return ExportCSVOutput(csv=ret.getvalue())
-
