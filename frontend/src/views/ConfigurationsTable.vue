@@ -1,3 +1,9 @@
+<style>
+.cell-value {
+  word-wrap: anywhere;
+}
+</style>
+
 <template>
 <v-container align="start">
     <v-card>
@@ -30,7 +36,7 @@ export default {
                 return;
             }
             this.configurations = response.data;
-        }
+        },
     },
     async mounted() {
         await this.getSettings();
@@ -41,19 +47,22 @@ export default {
             search: "",
             headers: [{
                     text: 'Name',
-                    value: 'name'
+                    value: 'name',
+
                 },
                 {
                     text: 'Data Type',
-                    value: 'type'
+                    value: 'type',
+                    cellClass: 'cell-value',
                 },
                 {
                     text: 'Default value',
-                    value: 'default_value'
+                    value: 'default_value',
+                    cellClass: 'cell-value',
                 },
                 {
                     text: 'Description',
-                    value: 'description'
+                    value: 'description',
                 },
             ],
             configurations: []

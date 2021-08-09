@@ -1,3 +1,9 @@
+<style>
+.cell-value {
+  word-wrap: anywhere;
+}
+</style>
+
 <template>
 <v-card>
     <vue-confirm-dialog></vue-confirm-dialog>
@@ -11,7 +17,7 @@
     </v-card-title>
     <v-card>
     </v-card>
-    <v-data-table :headers="headers" :items="rules" :search="search">
+    <v-data-table :headers="headers" :items="rules" :search="search" multi-sort>
         <template v-slot:item.actions="{ item }">
           <v-icon small @click.prevent="editRuleDialog=true">
                 mdi-pencil
@@ -88,7 +94,8 @@ export default {
                 }, [])
             headers.push({
                 text: "value",
-                value: "value"
+                value: "value",
+                cellClass: 'cell-value',
             }, {
                 text: "Added by",
                 value: "added_by"
