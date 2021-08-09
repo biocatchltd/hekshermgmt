@@ -4,6 +4,8 @@ import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify';
 import VueConfirmDialog from 'vue-confirm-dialog'
+import VueColumnsResizableVuetify from 'vue-columns-resizable-vuetify';
+
 
 Vue.prototype.$http = axios
 Vue.prototype.$http.defaults.validateStatus = (status) => {
@@ -16,11 +18,13 @@ if (process.env.NODE_ENV == 'development') {
 }
 Vue.config.productionTip = false
 
+Vue.use(VueConfirmDialog);
+Vue.use(VueColumnsResizableVuetify);
+
 new Vue({
   vuetify,
   router,
   render: h => h(App)
 }).$mount('#app')
 
-Vue.use(VueConfirmDialog)
 Vue.component('vue-confirm-dialog', VueConfirmDialog.default)
