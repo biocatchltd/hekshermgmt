@@ -1,6 +1,7 @@
 FROM node:lts as build-stage
 WORKDIR /app
 COPY frontend/package*.json ./
+RUN npm install --save vue-columns-resizable-vuetify
 RUN npm install
 COPY frontend .
 RUN npm run build
