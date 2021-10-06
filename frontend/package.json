@@ -11,6 +11,7 @@
     "axios": "^0.21.0",
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
+    "vue-columns-resizable-vuetify": "^1.0.3",
     "vue-confirm-dialog": "^1.0.2",
     "vue-router": "^3.5.1",
     "vuetify": "^2.4.0",
