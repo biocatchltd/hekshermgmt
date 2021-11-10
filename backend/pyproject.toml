@@ -6,7 +6,7 @@ authors = ["Aviram Hassan <aviram.hassan@biocatch.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.9"
-fastapi = "^0.63.0"
+fastapi = "^0.65.2"
 aiologstash = "^2.0.0"
 envolved = "0.3.0"
 sentry-sdk = "^0.19.5"
