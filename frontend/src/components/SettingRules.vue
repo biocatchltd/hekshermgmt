@@ -19,10 +19,10 @@
     </v-card>
     <v-data-table :headers="headers" :items="rules" :search="search" multi-sort>
         <template v-slot:item.actions="{ item }">
-          <v-icon small @click.prevent="editRuleDialog=true">
+          <v-icon small @click="editRule(setting, item)">
                 mdi-pencil
           </v-icon>
-          <edit-rule-dialog v-on:rule-saved="onRuleChange" v-model="editRuleDialog" :setting="setting" :rule="item"/>
+          <EditRuleDialog v-on:rule-saved="onRuleChange" v-model="editRuleDialog" :setting="setting" :rule="item" ref="edit"/>
           <v-spacer/>
             <v-icon small @click="deleteConfirmDialog(item)">
                 mdi-delete
@@ -80,6 +80,10 @@ export default {
                 return;
             }
             this.rules = response.data;
+        },
+        editRule(setting, rule) {
+          this.$refs.edit.selectRule(setting, rule);
+          this.editRuleDialog = true
         }
     },
     computed: {
