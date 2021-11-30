@@ -35,6 +35,7 @@
     </v-app-bar>
 
     <v-main>
+        <v-alert v-model="is_prod" type="error" color="red" class="text-center">Production</v-alert>
         <v-container>
             <router-view />
         </v-container>
@@ -54,13 +55,13 @@ export default {
 
     data: () => ({
         drawer: null,
+        is_prod: (process.env.VUE_APP_IS_PROD === 'true'),
     }),
 
     created() {
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             this.$vuetify.theme.dark = true
         }
-
     },
 }
 </script>
