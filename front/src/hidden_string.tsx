@@ -6,7 +6,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 type ShortStringProps = {
     value: string;
-    sx: SxProps<Theme>;
 }
 
 type ShortStringState = {
@@ -14,7 +13,7 @@ type ShortStringState = {
     popAnchor: HTMLButtonElement | null;
 }
 
-export class ShortString extends React.Component<ShortStringProps, ShortStringState> {
+export class HiddenString extends React.Component<ShortStringProps, ShortStringState> {
     constructor(props: ShortStringProps) {
         super(props);
         this.state = {
@@ -39,13 +38,7 @@ export class ShortString extends React.Component<ShortStringProps, ShortStringSt
     render() {
         return (
             <Fragment>
-                <Box sx={this.props.sx}>
-
-                <Typography>
-                    {this.props.value}
-                    <IconButton onClick={this.handleOpen}><ExpandMoreIcon/></IconButton>
-                </Typography>
-                </Box>
+                <IconButton onClick={this.handleOpen}><ExpandMoreIcon/></IconButton>
                 <Popover
                     open={this.state.isOpen}
                     onClick={this.handleClose}
@@ -61,20 +54,10 @@ export class ShortString extends React.Component<ShortStringProps, ShortStringSt
                 >
                     <Typography>
                         {this.props.value}
-                        <IconButton onClick={this.copyContent}>
-                            <ContentCopyIcon/>
-                        </IconButton>
+                        <IconButton onClick={this.copyContent}><ContentCopyIcon/></IconButton>
                     </Typography>
                 </Popover>
             </Fragment>
         )
-    }
-}
-
-export function short_string(value: string, maxLength: number, sx: SxProps<Theme> = {}) {
-    if (value.length > maxLength) {
-        return <ShortString value={value} sx={sx}/>;
-    } else {
-        return ;
     }
 }

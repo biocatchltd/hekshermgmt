@@ -7,9 +7,9 @@ import {createTheme} from "@mui/material/styles";
 import {ThemeProvider} from "@mui/styles";
 import MUIDataTable, {MUIDataTableColumn} from "mui-datatables";
 import {SettingType, settingType} from "./setting_type";
-import {Chip, CircularProgress} from "@mui/material";
+import {Chip, ChipProps, CircularProgress} from "@mui/material";
 import {ContextSelect} from "./context_select";
-import {TruncString} from "./trunc_string";
+import {TruncChip} from "./trunc_string";
 
 interface ModelGetSettings {
     settings: ModelGetSetting[];
@@ -291,7 +291,6 @@ export class Main extends React.Component<MainProps, MainState> {
         if (this.state.context_features === null || this.state.settings === null || this.state.rule_set === null) {
             return <CircularProgress />
         }
-        console.log('!!! render')
         let applicable_rules = this.state.settings.map(s =>potential_rules(this.state.rule_set?.rules_per_setting[s.name]!, this.state.context_features!, this.state.context_filters))
         let data = this.state.settings.map((setting,i) => setting.to_row(this.state.context_features!, applicable_rules[i]));
         let columns: (string | MUIDataTableColumn)[] = [
@@ -301,7 +300,7 @@ export class Main extends React.Component<MainProps, MainState> {
             {
                 name: 'type',
                 options: {
-                    customBodyRender: (value) => <TruncString value={value}/>
+                    customBodyRender: (value) => <TruncChip value={value}/>
                 }
             },
             {
@@ -311,7 +310,7 @@ export class Main extends React.Component<MainProps, MainState> {
                     customBodyRenderLite: (dataIndex) => {
                         let setting = this.state.settings![dataIndex];
                         let value = setting.type.Format(setting.default_value);
-                        return <TruncString value={value}/>
+                        return <TruncChip value={value}/>
                     }
                 }
             },
@@ -348,12 +347,21 @@ export class Main extends React.Component<MainProps, MainState> {
                 label: 'Value for Context',
                 options: {
                     customBodyRenderLite: (dataIndex) => {
-                        let value: string = data[dataIndex]['value_for_context'];
-                        let sx = {color: 'primary.main'};
-                        if (applicable_rules[dataIndex].length === 0) {
-                            sx = {color: 'text.primary'};
+                        let rules = applicable_rules[dataIndex];
+                        let setting = this.state.settings![dataIndex];
+                        let value;
+                        let sx : ChipProps = {color: 'primary'};
+                        if (rules.length === 0) {
+                            value = setting.type.Format(setting.default_value)
+                            sx = {color: 'default'};
                         }
-                        return <TruncString value={value} sx={sx}/>
+                        else if (rules.length === 1) {
+                            value = setting.type.Format(rules[0].value)
+                        }
+                        else {
+                            value = "Multiple"
+                        }
+                        return <TruncChip value={value} sx={sx}/>
                     }
                 }
             })
