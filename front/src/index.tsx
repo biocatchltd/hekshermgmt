@@ -7,9 +7,10 @@ import {createTheme} from "@mui/material/styles";
 import {ThemeProvider} from "@mui/styles";
 import MUIDataTable, {MUIDataTableColumn} from "mui-datatables";
 import {SettingType, settingType} from "./setting_type";
-import {Chip, ChipProps, CircularProgress} from "@mui/material";
+import {Chip, ChipProps, CircularProgress, Grid} from "@mui/material";
 import {ContextSelect} from "./context_select";
 import {TruncChip} from "./trunc_string";
+import {GetPotentialRules, PotentialRule, RuleBranch, ruleBranchFromRules, RuleLeaf} from "./potential_rules";
 
 interface ModelGetSettings {
     settings: ModelGetSetting[];
@@ -28,34 +29,35 @@ class Setting {
     type: SettingType
     default_value: string
     configurable_features: string[]
-    metadata: Record<string, any>
+    metadata: Map<string, any>
 
     constructor(model: ModelGetSetting) {
         this.name = model.name;
         this.type = settingType(model.type);
         this.default_value = model.default_value;
         this.configurable_features = model.configurable_features;
-        this.metadata = model.metadata;
+        this.metadata = new Map<string, any>(Object.entries(model.metadata));
     }
 
-    to_row(context_feature_names: string[], applicable_rules: RuleLeaf[]): Record<string, any> {
+    to_row(context_feature_names: string[], applicable_rules: PotentialRule[]): Record<string, any> {
         let ret: { [key: string]: any } = {
             name: this.name,
             type: this.type.toString(),
             default_value: this.type.asData(this.default_value),
             configurable_features: this.configurable_features.join(', '),
         }
-        if (applicable_rules.length == 1){
-            ret['value_for_context'] = this.type.asData(applicable_rules[0].value);
-        }
-        else if (applicable_rules.length > 1){
-            ret['value_for_context'] = "<multiple>"
-        }
-        else {
+        // note that there's always at least one applicable rule, since we include the default
+        if (applicable_rules.length > 1) {
+            ret['value_for_context'] = "<multiple>";
+        } else if (applicable_rules[0].rule.rule_id === -1){
+            // default rule
             ret['value_for_context'] = ret['default_value']
+        } else {
+            ret['value_for_context'] = this.type.asData(applicable_rules[0].rule.value);
         }
-        for (let key in this.metadata) {
-            ret["md." + key] = JSON.stringify(this.metadata[key]);
+
+        for (let [key, value] of this.metadata) {
+            ret["md." + key] = JSON.stringify(value);
         }
         for (let cf of context_feature_names) {
             ret["cf." + cf] = this.configurable_features.includes(cf)
@@ -65,131 +67,42 @@ class Setting {
 }
 
 interface ModelQuery {
-    settings: { [key: string]: {rules: ModelRule[]} }
+    settings: { [key: string]: { rules: ModelRule[], default_value: any} }
 }
-interface ModelRule {
+
+export interface ModelRule {
     value: any
     context_features: [string, string][]
     rule_id: number
     metadata: Record<string, any>
 }
 
-class UncollatedRule{
-    value: any
-    context_features: Record<string, string>
-    rule_id: number
-    metadata: Record<string, any>
-
-    constructor(model: ModelRule) {
-        this.value = model.value;
-        this.context_features = {}
-        for (let [cf, value] of model.context_features) {
-            this.context_features[cf] = value
-        }
-        this.rule_id = model.rule_id;
-        this.metadata = model.metadata;
-    }
-}
-
-class RuleLeaf {
-    value: any
-    rule_id: number
-    last_exact_match_depth: number
-    metadata: Record<string, any>
-
-    constructor(model: UncollatedRule, context_features: string[]) {
-        this.value = model.value;
-        this.rule_id = model.rule_id;
-        this.metadata = model.metadata;
-        this.last_exact_match_depth = -1;
-        for (let i = context_features.length - 1; i >= 0; i--) {
-            let cf = context_features[i];
-            if (cf in model.context_features) {
-                this.last_exact_match_depth = i;
-                break;
-            }
-        }
-    }
-}
-
-type RuleBranch = Record<string, RuleLeaf> | RuleNode  // the key "*" specified wildcard
-interface RuleNode extends Record<string, RuleBranch>{}
-
-function ruleBranchFromRules(rules: UncollatedRule[], context_features: string[], depth: number=0): RuleBranch{
-    let cf = context_features[depth];
-    let ret: RuleBranch = {}
-    if (depth == context_features.length - 1) {
-        // we are at the bottom of the tree, add direct rules
-        let ret: RuleBranch = {};
-        for (let rule of rules) {
-            ret[rule.context_features[cf] ?? "*"] = new RuleLeaf(rule, context_features);
-        }
-        return ret;
-    } else {
-        // recurse
-        let children: Record<string, UncollatedRule[]> = {}
-        for (let rule of rules) {
-            let value = rule.context_features[cf] ?? "*";
-            if (!(value in children)) {
-                children[value] = []
-            }
-            children[value].push(rule)
-        }
-        for (let value in children) {
-            ret[value] = ruleBranchFromRules(children[value], context_features, depth + 1)
-        }
-        return ret;
-    }
-}
-function potential_rules(branch: RuleBranch, context_features: string[], context_filters: Record<string, string>, depth=0): RuleLeaf[] {
-    let cf = context_features[depth];
-    let filter: string | null = context_filters[cf] ?? null;
-    let ret: RuleLeaf[] = [];
-    if (depth == context_features.length - 1) {
-        // we are at the bottom of the tree, add direct rules
-        if (filter !== null){
-            let direct_match = branch[filter] as RuleLeaf | undefined;
-            if (direct_match !== undefined) {
-                ret.push(direct_match)
-            }
-        }
-        let wild_match = branch["*"] as RuleLeaf | undefined;
-        if (wild_match !== undefined) {
-            ret.push(wild_match)
-        }
-
-    } else {
-        // recurse
-        if (filter !== null){
-            let direct_match = branch[filter] as RuleBranch | undefined;
-            if (direct_match !== undefined) {
-                ret = ret.concat(potential_rules(direct_match, context_features, context_filters, depth + 1))
-            }
-        }
-        let wild_match = branch["*"] as RuleBranch | undefined;
-        if (wild_match !== undefined) {
-            ret = ret.concat(potential_rules(wild_match, context_features, context_filters, depth + 1))
-        }
-    }
-    return ret
-}
-
 class RuleSet {
-    rules_per_setting: Record<string, RuleBranch>
-    context_options: Record<string, Set<string>>
+    rules_per_setting: Map<string, RuleBranch>
+    context_options: Map<string, Set<string>>
 
-    constructor(model: ModelQuery, context_features: string[]) {
-        this.rules_per_setting = {}
-        this.context_options = Object.fromEntries(context_features.map(cf => [cf, new Set<string>()]))
+    constructor(model: ModelQuery, context_features: string[], settings: Setting[]) {
+        let settings_by_name: Map<string, Setting> = new Map(settings.map(s => [s.name, s]));
+        this.rules_per_setting = new Map<string, RuleBranch>()
+        this.context_options = new Map(context_features.map(cf => [cf, new Set<string>()]))
         for (let setting_name in model.settings) {
+            let setting = settings_by_name.get(setting_name)!;
             let setting_data = model.settings[setting_name];
-            let uncollated_rules: UncollatedRule[] = setting_data.rules.map(r => new UncollatedRule(r));
-            this.rules_per_setting[setting_name] = ruleBranchFromRules(uncollated_rules, context_features);
+            let uncollated_rules: RuleLeaf[] = setting_data.rules.map(r => new RuleLeaf(r));
+            uncollated_rules.push(new RuleLeaf({
+                value: setting_data.default_value,
+                context_features: [],
+                rule_id: -1,
+                metadata: new Map()
+            }))
+
+            this.rules_per_setting.set(setting_name,
+                ruleBranchFromRules(uncollated_rules, setting.configurable_features));
             for (let rule of uncollated_rules) {
                 for (let cf of context_features) {
-                    let val = rule.context_features[cf];
+                    let val = rule.context_features.get(cf);
                     if (val !== undefined) {
-                        this.context_options[cf].add(val)
+                        this.context_options.get(cf)!.add(val)
                     }
                 }
             }
@@ -210,6 +123,7 @@ export class Main extends React.Component<MainProps, MainState> {
     heksher_client: AxiosInstance
     promises: Set<Promise<any>>
     abort_controller: AbortController
+    view_column_preference: Map<string, boolean> = new Map()
 
     constructor(props: MainProps) {
         super(props);
@@ -259,7 +173,11 @@ export class Main extends React.Component<MainProps, MainState> {
         )
         let settings_promise = this.heksher_client.get<ModelGetSettings>('/api/v1/settings',
             {signal: this.abort_controller.signal}).then(response => {
-            this.setState({settings: response.data.settings.map(model => new Setting(model))});
+            this.setState({
+                settings: response.data.settings.map(model => {
+                    return new Setting(model)
+                })
+            });
             this.promises.delete(settings_promise)
         })
         this.promises.add(
@@ -267,11 +185,12 @@ export class Main extends React.Component<MainProps, MainState> {
         )
         let query_promise = this.heksher_client.get<ModelQuery>('/api/v1/query',
             {signal: this.abort_controller.signal}).then((resp) => {
-                this.promises.delete(query_promise)
-                return resp
+            this.promises.delete(query_promise)
+            return resp
         })
-        let ruleset_promise = Promise.all([query_promise, cf_promise]).then(([query_response, _]) => {
-            this.setState({rule_set: new RuleSet(query_response.data, this.state.context_features!)})
+        let ruleset_promise = Promise.all([query_promise, cf_promise, settings_promise])
+            .then(([query_response]) => {
+            this.setState({rule_set: new RuleSet(query_response.data, this.state.context_features!, this.state.settings!)});
             this.promises.delete(ruleset_promise)
         })
         this.promises.add(
@@ -289,10 +208,20 @@ export class Main extends React.Component<MainProps, MainState> {
 
     render() {
         if (this.state.context_features === null || this.state.settings === null || this.state.rule_set === null) {
-            return <CircularProgress />
+            return (<Grid container
+                          spacing={0}
+                          direction="column"
+                          alignItems="center"
+                          justifyContent="center"
+                          style={{minHeight: '100vh'}}>
+                <CircularProgress/>
+            </Grid>)
         }
-        let applicable_rules = this.state.settings.map(s =>potential_rules(this.state.rule_set?.rules_per_setting[s.name]!, this.state.context_features!, this.state.context_filters))
-        let data = this.state.settings.map((setting,i) => setting.to_row(this.state.context_features!, applicable_rules[i]));
+        let applicable_rules = this.state.settings.map(s =>
+            GetPotentialRules(this.state.rule_set?.rules_per_setting.get(s.name)!, s.configurable_features,
+                this.state.context_filters))
+
+        let data = this.state.settings.map((setting, i) => setting.to_row(this.state.context_features!, applicable_rules[i]));
         let columns: (string | MUIDataTableColumn)[] = [
             {
                 name: 'name',
@@ -317,7 +246,7 @@ export class Main extends React.Component<MainProps, MainState> {
             ...this.state.context_features.map(cf => ({
                 name: 'cf.' + cf,
                 options: {
-                    display: false,
+                    display: this.view_column_preference.get('cf.' + cf) ?? false,
                     customBodyRender: (value: any) => {
                         return value ?
                             <Chip label="True" color="success"/> :
@@ -336,54 +265,64 @@ export class Main extends React.Component<MainProps, MainState> {
                 columns.push({
                     name: 'md.' + key,
                     options: {
-                        display: false
+                        display: this.view_column_preference.get('md.' + key) ?? false
                     }
                 })
             }
         }
-        if (Object.keys(this.state.context_filters).length > 0) {
-            columns.push({
-                name: 'value_for_context',
-                label: 'Value for Context',
-                options: {
-                    customBodyRenderLite: (dataIndex) => {
-                        let rules = applicable_rules[dataIndex];
-                        let setting = this.state.settings![dataIndex];
-                        let value;
-                        let sx : ChipProps = {color: 'primary'};
-                        if (rules.length === 0) {
-                            value = setting.type.Format(setting.default_value)
-                            sx = {color: 'default'};
-                        }
-                        else if (rules.length === 1) {
-                            value = setting.type.Format(rules[0].value)
-                        }
-                        else {
-                            value = "Multiple"
-                        }
-                        return <TruncChip value={value} sx={sx}/>
+        columns.push({
+            name: 'value_for_context',
+            label: 'Value for Context',
+            options: {
+                customBodyRenderLite: (dataIndex) => {
+                    // note that there's always at least one applicable rule, since we include the default
+                    let setting = this.state.settings![dataIndex];
+                    let rules = applicable_rules[dataIndex];
+                    let value;
+                    let sx: ChipProps = {color: 'primary'};
+                    let tooltip: string|null = null;
+                    if (rules.length > 1) {
+                        value = "Multiple"
+                        tooltip = `${rules.length} possible values:\n`
+                            + rules.map(r => r.get_assumptions_string()+'=>'+r.rule.value).join('\n');
+                    } else if (rules[0].rule.rule_id === -1){
+                        // default rule
+                        value = setting.type.Format(setting.default_value)
+                        sx = {color: 'default'};
+                    } else {
+                        value = setting.type.Format(rules[0].rule.value);
                     }
-                }
-            })
-        }
+                    return <TruncChip value={value} tooltip={tooltip!} chip_props={sx}/>
+                },
+                display: this.view_column_preference.get('value_for_context')
+                    ?? Object.keys(this.state.context_filters).length > 0
+            }
+        })
         return (
             <Fragment>
-            <ContextSelect context_options={this.state.rule_set.context_options} owner={this}/>
-            <ThemeProvider theme={createTheme()}>
-                <MUIDataTable
-                    title="Settings"
-                    data={data}
-                    columns={columns}
-                    options={{
-                        'responsive': 'standard',
-                        'print': false,
-                        'draggableColumns': {'enabled':true},
-                        'resizableColumns': true,
-                        // @ts-ignore
-                        'searchAlwaysOpen': true,
-                }}
-                />
-            </ThemeProvider>
+                <ContextSelect context_options={this.state.rule_set.context_options} owner={this}/>
+                <ThemeProvider theme={createTheme()}>
+                    <MUIDataTable
+                        title="Settings"
+                        data={data}
+                        columns={columns}
+                        options={{
+                            'responsive': 'standard',
+                            'print': false,
+                            'draggableColumns': {'enabled': true},
+                            'resizableColumns': true,
+                            // @ts-ignore
+                            'searchAlwaysOpen': true,
+                            'onViewColumnsChange': (c:string, a:string) => {
+                                if (a == 'add'){
+                                    this.view_column_preference.set(c, true);
+                                } else if (a == 'remove'){
+                                    this.view_column_preference.set(c, false);
+                                }
+                            },
+                        }}
+                    />
+                </ThemeProvider>
             </Fragment>
         )
     }

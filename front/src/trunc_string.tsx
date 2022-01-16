@@ -1,13 +1,13 @@
 import * as React from "react";
-import {Box, SxProps, Theme, Typography, Stack, Chip, ChipProps} from "@mui/material";
+import {Box, Stack, Chip, ChipProps, Tooltip} from "@mui/material";
 import {HiddenString} from "./hidden_string";
-// @ts-ignore
-import {OverflowDetector} from 'react-overflow';
+import DetectableOverflow from "react-detectable-overflow";
 
 
 type ShortStringProps = {
     value: string;
-    sx?: ChipProps;
+    tooltip?: string;
+    chip_props?: ChipProps;
 }
 
 type ShortStringState = {
@@ -33,6 +33,16 @@ export class TruncChip extends React.Component<ShortStringProps, ShortStringStat
     }
 
     render() {
+        let chip = <Chip {...this.props.chip_props} label={this.props.value} />;
+
+        let inner_element = (this.props.tooltip !== undefined) ?
+            <Tooltip title={
+                <span style={{ whiteSpace: 'pre-line' }}>
+                {this.props.tooltip}
+                </span>
+            }>{chip}</Tooltip> :
+            chip;
+
         return (
             <Stack direction="row" justifyContent="flex-end" alignItems="center">
                 <Box style={{position: "relative", height: "20px", width: "100%"}}>
@@ -56,13 +66,11 @@ export class TruncChip extends React.Component<ShortStringProps, ShortStringStat
                             ref={ref => (this.span = ref)}
                         >
 
-                            <OverflowDetector onOverflowChange={(a: boolean) => {
+                            <DetectableOverflow onChange={(a: boolean) => {
                                 this.setState({overflow: a});
                             }}>
-                                <Chip {...this.props.sx} label={this.props.value} />
-                                {/*<div>{"Triggered: " + this.state.overflow}</div>
-                                <span>This is a long text that activates ellipsis ddddddddddddddd</span>*/}
-                            </OverflowDetector>
+                                {inner_element}
+                            </DetectableOverflow>
                         </Box>
                     </Box>
                 </Box>

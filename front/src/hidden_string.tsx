@@ -52,10 +52,12 @@ export class HiddenString extends React.Component<ShortStringProps, ShortStringS
                         horizontal: 'center',
                     }}
                 >
-                    <Typography>
-                        {this.props.value}
-                        <IconButton onClick={this.copyContent}><ContentCopyIcon/></IconButton>
-                    </Typography>
+                    <Box sx={{'padding': '5px'}}>
+                        <Typography>
+                            {this.props.value}
+                            <IconButton onClick={this.copyContent}><ContentCopyIcon/></IconButton>
+                        </Typography>
+                    </Box>
                 </Popover>
             </Fragment>
         )
