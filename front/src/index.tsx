@@ -3,20 +3,25 @@ import * as React from 'react';
 import {Fragment} from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import BallotIcon from '@mui/icons-material/Ballot';
 import {createTheme} from "@mui/material/styles";
 import {ThemeProvider} from "@mui/styles";
 import MUIDataTable, {MUIDataTableColumn} from "mui-datatables";
-import {SettingType, settingType} from "./setting_type";
-import {Chip, ChipProps, CircularProgress, Grid} from "@mui/material";
+import {Box, Button, Chip, ChipProps, CircularProgress, Fab, Grid, IconButton} from "@mui/material";
 import {ContextSelect} from "./context_select";
 import {TruncChip} from "./trunc_string";
-import {GetPotentialRules, PotentialRule, RuleBranch, ruleBranchFromRules, RuleLeaf} from "./potential_rules";
+import {GetPotentialRules, RuleBranch, ruleBranchFromRules, RuleLeaf} from "./potential_rules";
+import {ExpandChip} from "./expand_chip";
+import {Setting} from "./setting";
+import {ResizableDrawer} from "./resizable_drawer";
 
-interface ModelGetSettings {
+export interface ModelGetSettings {
     settings: ModelGetSetting[];
 }
 
-interface ModelGetSetting {
+export interface ModelGetSetting {
     name: string
     type: string
     default_value: string
@@ -24,50 +29,8 @@ interface ModelGetSetting {
     metadata: Record<string, any>
 }
 
-class Setting {
-    name: string
-    type: SettingType
-    default_value: string
-    configurable_features: string[]
-    metadata: Map<string, any>
-
-    constructor(model: ModelGetSetting) {
-        this.name = model.name;
-        this.type = settingType(model.type);
-        this.default_value = model.default_value;
-        this.configurable_features = model.configurable_features;
-        this.metadata = new Map<string, any>(Object.entries(model.metadata));
-    }
-
-    to_row(context_feature_names: string[], applicable_rules: PotentialRule[]): Record<string, any> {
-        let ret: { [key: string]: any } = {
-            name: this.name,
-            type: this.type.toString(),
-            default_value: this.type.asData(this.default_value),
-            configurable_features: this.configurable_features.join(', '),
-        }
-        // note that there's always at least one applicable rule, since we include the default
-        if (applicable_rules.length > 1) {
-            ret['value_for_context'] = "<multiple>";
-        } else if (applicable_rules[0].rule.rule_id === -1){
-            // default rule
-            ret['value_for_context'] = ret['default_value']
-        } else {
-            ret['value_for_context'] = this.type.asData(applicable_rules[0].rule.value);
-        }
-
-        for (let [key, value] of this.metadata) {
-            ret["md." + key] = JSON.stringify(value);
-        }
-        for (let cf of context_feature_names) {
-            ret["cf." + cf] = this.configurable_features.includes(cf)
-        }
-        return ret
-    }
-}
-
 interface ModelQuery {
-    settings: { [key: string]: { rules: ModelRule[], default_value: any} }
+    settings: { [key: string]: { rules: ModelRule[], default_value: any } }
 }
 
 export interface ModelRule {
@@ -117,6 +80,10 @@ type MainState = {
     settings: Setting[] | null
     rule_set: RuleSet | null
     context_filters: Record<string, string>
+
+    setting_panel_open: boolean
+    setting_panel_target: string | null
+    setting_panel_button_right: number
 }
 
 export class Main extends React.Component<MainProps, MainState> {
@@ -148,7 +115,10 @@ export class Main extends React.Component<MainProps, MainState> {
             context_features: null,
             settings: null,
             rule_set: null,
-            context_filters: {}
+            context_filters: {},
+            setting_panel_open: false,
+            setting_panel_target: null,
+            setting_panel_button_right: 0
         };
     }
 
@@ -190,9 +160,9 @@ export class Main extends React.Component<MainProps, MainState> {
         })
         let ruleset_promise = Promise.all([query_promise, cf_promise, settings_promise])
             .then(([query_response]) => {
-            this.setState({rule_set: new RuleSet(query_response.data, this.state.context_features!, this.state.settings!)});
-            this.promises.delete(ruleset_promise)
-        })
+                this.setState({rule_set: new RuleSet(query_response.data, this.state.context_features!, this.state.settings!)});
+                this.promises.delete(ruleset_promise)
+            })
         this.promises.add(
             ruleset_promise
         )
@@ -225,6 +195,21 @@ export class Main extends React.Component<MainProps, MainState> {
         let columns: (string | MUIDataTableColumn)[] = [
             {
                 name: 'name',
+                options: {
+                    customBodyRenderLite: (dataIndex) => {
+                        let setting = this.state.settings![dataIndex];
+                        let value = setting.name;
+                        return <>
+                            <IconButton onClick={() => this.setState({
+                                setting_panel_target: setting.name,
+                                setting_panel_open: true
+                            })}>
+                                <BallotIcon/>
+                            </IconButton>
+                            {value}
+                        </>
+                    }
+                }
             },
             {
                 name: 'type',
@@ -241,6 +226,36 @@ export class Main extends React.Component<MainProps, MainState> {
                         let value = setting.type.Format(setting.default_value);
                         return <TruncChip value={value}/>
                     }
+                }
+            },
+            {
+                name: 'value_for_context',
+                label: 'Value for Context',
+                options: {
+                    customBodyRenderLite: (dataIndex) => {
+                        // note that there's always at least one applicable rule, since we include the default
+                        let setting = this.state.settings![dataIndex];
+                        let rules = applicable_rules[dataIndex];
+                        if (rules.length > 1) {
+                            let tooltip = `${rules.length} possible values:\n`
+                                + rules.map(r => r.get_assumptions_string() + ' => ' + r.rule.value).join('\n');
+                            return <ExpandChip value={'<' + rules.length + ' Options>'} tooltip={tooltip}
+                                               chip_props={{color: 'primary'}}/>
+                        } else {
+                            let value;
+                            let sx: ChipProps = {color: 'primary'};
+                            if (rules[0].rule.rule_id === -1) {
+                                // default rule
+                                value = setting.type.Format(setting.default_value)
+                                sx = {color: 'default'};
+                            } else {
+                                value = setting.type.Format(rules[0].rule.value);
+                            }
+                            return <TruncChip value={value} chip_props={sx}/>
+                        }
+                    },
+                    display: this.view_column_preference.get('value_for_context')
+                        ?? Object.keys(this.state.context_filters).length > 0
                 }
             },
             ...this.state.context_features.map(cf => ({
@@ -270,38 +285,10 @@ export class Main extends React.Component<MainProps, MainState> {
                 })
             }
         }
-        columns.push({
-            name: 'value_for_context',
-            label: 'Value for Context',
-            options: {
-                customBodyRenderLite: (dataIndex) => {
-                    // note that there's always at least one applicable rule, since we include the default
-                    let setting = this.state.settings![dataIndex];
-                    let rules = applicable_rules[dataIndex];
-                    let value;
-                    let sx: ChipProps = {color: 'primary'};
-                    let tooltip: string|null = null;
-                    if (rules.length > 1) {
-                        value = "Multiple"
-                        tooltip = `${rules.length} possible values:\n`
-                            + rules.map(r => r.get_assumptions_string()+'=>'+r.rule.value).join('\n');
-                    } else if (rules[0].rule.rule_id === -1){
-                        // default rule
-                        value = setting.type.Format(setting.default_value)
-                        sx = {color: 'default'};
-                    } else {
-                        value = setting.type.Format(rules[0].rule.value);
-                    }
-                    return <TruncChip value={value} tooltip={tooltip!} chip_props={sx}/>
-                },
-                display: this.view_column_preference.get('value_for_context')
-                    ?? Object.keys(this.state.context_filters).length > 0
-            }
-        })
         return (
             <Fragment>
-                <ContextSelect context_options={this.state.rule_set.context_options} owner={this}/>
                 <ThemeProvider theme={createTheme()}>
+                    <ContextSelect context_options={this.state.rule_set.context_options} owner={this}/>
                     <MUIDataTable
                         title="Settings"
                         data={data}
@@ -313,15 +300,43 @@ export class Main extends React.Component<MainProps, MainState> {
                             'resizableColumns': true,
                             // @ts-ignore
                             'searchAlwaysOpen': true,
-                            'onViewColumnsChange': (c:string, a:string) => {
-                                if (a == 'add'){
+                            'onViewColumnsChange': (c: string, a: string) => {
+                                if (a == 'add') {
                                     this.view_column_preference.set(c, true);
-                                } else if (a == 'remove'){
+                                } else if (a == 'remove') {
                                     this.view_column_preference.set(c, false);
                                 }
                             },
+                            'selectableRows': 'none',
                         }}
                     />
+                    <Fab onClick={() => this.setState({
+                        'setting_panel_open': !this.state.setting_panel_open,
+                    })}
+                         style={{
+                             position: "absolute",
+                             top: 30,
+                             right: this.state.setting_panel_open ? (this.state.setting_panel_button_right - 16) : 0,
+                             zIndex: 1400, // default z index is 1300 for drawers and I neither know  nor care why
+                         }}
+                         variant={this.state.setting_panel_open ? "circular" : "extended"}
+                         disabled={this.state.setting_panel_target == null}>
+                        {this.state.setting_panel_open ? <ChevronRightIcon/> : (
+                            <><ChevronLeftIcon/>{this.state.setting_panel_target ?? 'Setting'}</>
+                        )}
+                    </Fab>
+                    <ResizableDrawer
+                        drawerProps={{
+                            variant: "persistent",
+                            anchor: "right",
+                            open: this.state.setting_panel_open,
+                        }}
+                        minWidth={200}
+                        maxWidth={1000}
+                        onWidthChange={(w) => this.setState({'setting_panel_button_right': w})}
+                    >
+                        laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    </ResizableDrawer>
                 </ThemeProvider>
             </Fragment>
         )

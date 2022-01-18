@@ -109,25 +109,25 @@ export class RuleLeaf {
     }
 }
 
-export class PotentialRule{
+export class PotentialRule {
     rule: RuleLeaf
     assumptions: Record<string, string>
 
-    constructor(match: RuleMatch, context_features: string[]){
+    constructor(match: RuleMatch, context_features: string[]) {
         this.rule = match.rule
         this.assumptions = {}
         for (let i in match.context_matches) {
             let match_element = match.context_matches[i]
             let cf = context_features[i]
-            if (match_element === presume_wildcard){
+            if (match_element === presume_wildcard) {
                 this.assumptions[cf] = '*'
-            } else if (typeof match_element === 'string'){
+            } else if (typeof match_element === 'string') {
                 this.assumptions[cf] = match_element
             }
         }
     }
 
-    get_assumptions_string(): string{
+    get_assumptions_string(): string {
         return Object.entries(this.assumptions).map(([cf, value]) => `${cf}: ${value}`).join(', ')
     }
 }
@@ -181,7 +181,10 @@ function _potential_rules(branch: RuleBranch, context_features: string[], contex
         } else {
             for (let value in branch) {
                 let rule = branch[value] as RuleLeaf;
-                ret.push({'rule': rule, 'context_matches': [...context_matches, value == "*" ? presume_wildcard : value]})
+                ret.push({
+                    'rule': rule,
+                    'context_matches': [...context_matches, value == "*" ? presume_wildcard : value]
+                })
             }
         }
     } else {
@@ -205,7 +208,7 @@ function _potential_rules(branch: RuleBranch, context_features: string[], contex
     return ret
 }
 
-export function GetPotentialRules(branch: RuleBranch, configurable_features: string[], context_filters: Record<string, string>): PotentialRule[]{
+export function GetPotentialRules(branch: RuleBranch, configurable_features: string[], context_filters: Record<string, string>): PotentialRule[] {
     let results = _potential_rules(branch, configurable_features, context_filters, []);
     let blacklisted_indices = new Set<number>();
     let ret: PotentialRule[] = [];
@@ -214,14 +217,14 @@ export function GetPotentialRules(branch: RuleBranch, configurable_features: str
             continue;
         }
         let candidate = results[i];
-        for (let j = i+1; j < results.length; j++) {
+        for (let j = i + 1; j < results.length; j++) {
             let challenger = results[j];
             let cmp = compare_matches(candidate.context_matches, challenger.context_matches);
-            if (cmp == -1){
+            if (cmp == -1) {
                 // the candidate supersedes the challenger, so the challenger is blacklisted
                 blacklisted_indices.add(j);
             }
-            if (cmp == 1){
+            if (cmp == 1) {
                 // the challenger supersedes the candidate, so the candidate is blacklisted
                 blacklisted_indices.add(i);
                 break // we can break here, since whatever challenger the candidate would blacklist
@@ -233,25 +236,7 @@ export function GetPotentialRules(branch: RuleBranch, configurable_features: str
         }
     }
     // finally, we sort the rules by their last exact-match condition
-    ret.sort((a,b) =>{
-        let tiebreaker = 0
-        for (let i = configurable_features.length-1; i >= 0; i--) {
-            let cf = configurable_features[i];
-            let a_val = a.rule.context_features.get(cf) ?? "*";
-            let b_val = b.rule.context_features.get(cf) ?? "*";
-            if (a_val === '*'){
-                if (b_val === '*'){
-                    continue
-                } else {
-                    return -1
-                }
-            } else if (b_val === '*'){
-                return 1
-            }
-            tiebreaker = a_val.localeCompare(b_val);
-        }
-        return tiebreaker
-    })
+    ret.sort((a, b) => -compare_rules(a.rule, b.rule, configurable_features));
     return ret;
 }
 
@@ -261,46 +246,64 @@ function compare_matches(a: ContextMatch[], b: ContextMatch[]): number {
     for (let i = 0; i < a.length; i++) {
         // filter is set
         if (a[i] === exact_match
-            && b[i] === exact_match) {}
-        else if (a[i] === wildcard
-            && b[i] === wildcard) {}
-        else if (a[i] === exact_match
-            && b[i] === wildcard){
+            && b[i] === exact_match) {
+        } else if (a[i] === wildcard
+            && b[i] === wildcard) {
+        } else if (a[i] === exact_match
+            && b[i] === wildcard) {
             advantage = -1;
         } else if (a[i] === wildcard
-            && b[i] === exact_match){
+            && b[i] === exact_match) {
             advantage = 1;
         } // filter is unset
         else if (a[i] === presume_wildcard
-            && b[i] === presume_wildcard) {}
-        else if (a[i] === presume_wildcard
-            && typeof b[i] === 'string'){
-            if (guard === 1){
+            && b[i] === presume_wildcard) {
+        } else if (a[i] === presume_wildcard
+            && typeof b[i] === 'string') {
+            if (guard === 1) {
                 return 0;
             }
             guard = -1
             advantage = 0;
-        }else if (typeof a[i] === 'string'
-            && b[i] === presume_wildcard){
-            if (guard === -1){
+        } else if (typeof a[i] === 'string'
+            && b[i] === presume_wildcard) {
+            if (guard === -1) {
                 return 0;
             }
             guard = 1
             advantage = 0;
-        }
-        else if (typeof a[i] === 'string'
+        } else if (typeof a[i] === 'string'
             && typeof b[i] === 'string'
-            && a[i] === b[i]){}
-        else if (typeof a[i] === 'string'
+            && a[i] === b[i]) {
+        } else if (typeof a[i] === 'string'
             && typeof b[i] === 'string'
-            && a[i] !== b[i]){
+            && a[i] !== b[i]) {
             return 0;
-        }
-        else {
+        } else {
             throw new Error("unexpected match type")
         }
     }
     if (advantage !== 0 && guard !== -advantage)
         return advantage;
     return 0;
+}
+
+function compare_rules(a: RuleLeaf, b: RuleLeaf, configurable_features: string[]): number {
+    let tiebreaker = 0
+    for (let i = configurable_features.length - 1; i >= 0; i--) {
+        let cf = configurable_features[i];
+        let a_val = a.context_features.get(cf) ?? "*";
+        let b_val = b.context_features.get(cf) ?? "*";
+        if (a_val === '*') {
+            if (b_val === '*') {
+                continue
+            } else {
+                return -1
+            }
+        } else if (b_val === '*') {
+            return 1
+        }
+        tiebreaker = a_val.localeCompare(b_val);
+    }
+    return tiebreaker
 }
