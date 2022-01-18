@@ -7,37 +7,26 @@ type ExpandChipProps = {
     chip_props?: ChipProps;
 }
 
-type ExpandChipState = {
-    backdrop: boolean;
-}
+export function ExpandChip(props: ExpandChipProps){
+    const [backdrop_open, set_backdrop_open] = React.useState(false);
 
-export class ExpandChip extends React.Component<ExpandChipProps, ExpandChipState> {
-    constructor(props: ExpandChipProps) {
-        super(props);
-        this.state = {
-            backdrop: false,
-        };
-    }
-
-    render() {
-        let chip = <Chip {...this.props.chip_props} label={this.props.value}
-                         onClick={() => this.setState({backdrop: true})}/>;
-        let tooltip_div = (<div style={{textAlign: "center"}}>
-                    <span style={{whiteSpace: 'pre-line'}}>
-                        {this.props.tooltip}
-                    </span>
-        </div>)
-        return (
-            <>
-                <Tooltip title={tooltip_div}>{chip}</Tooltip>
-                <Backdrop open={this.props.tooltip!==undefined && this.state.backdrop}
-                          onClick={() => this.setState({'backdrop': false})}
-                          sx={{zIndex: (theme) => theme.zIndex.drawer + 1}}>
-                    <Card sx={{'p': '10px'}} onClick={e => e.stopPropagation()}>
-                        {tooltip_div}
-                    </Card>
-                </Backdrop>
-            </>
-        )
-    }
+    let chip = <Chip {...props.chip_props} label={props.value}
+                     onClick={() => set_backdrop_open(true)}/>;
+    let tooltip_div = (<div style={{textAlign: "center"}}>
+                <span style={{whiteSpace: 'pre-line'}}>
+                    {props.tooltip}
+                </span>
+                </div>)
+    return (
+        <>
+            <Tooltip title={tooltip_div}>{chip}</Tooltip>
+            <Backdrop open={backdrop_open}
+                      onClick={() => set_backdrop_open(false)}
+                      sx={{zIndex: (theme) => theme.zIndex.drawer + 1}}>
+                <Card sx={{'p': '10px'}} onClick={e => e.stopPropagation()}>
+                    {tooltip_div}
+                </Card>
+            </Backdrop>
+        </>
+    )
 }

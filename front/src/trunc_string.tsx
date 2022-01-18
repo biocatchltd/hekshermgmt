@@ -27,27 +27,23 @@ export class TruncChip extends React.Component<TruncChipProps, TruncChipState> {
 
         return (
             <Fragment>
-                <Stack direction="row" justifyContent="flex-end" alignItems="center">
+                <Stack direction="row" justifyContent="flex" alignItems="center">
                     <Box style={{position: "relative", height: "20px", width: "100%"}}>
                         <Box style={{
                             position: "absolute",
-                            top: 0,
                             right: 0,
-                            bottom: 0,
                             left: 0,
                             boxSizing: "border-box",
                             display: "block",
-                            width: "100%"
                         }}>
                             <Box
                                 style={{
                                     boxSizing: "border-box",
-                                    overflow: "hidden",
+                                    overflowX: "hidden",
                                     textOverflow: "",
                                     whiteSpace: "nowrap",
                                 }}
                             >
-
                                 <DetectableOverflow onChange={(a: boolean) => {
                                     this.setState({overflow: a});
                                 }}>

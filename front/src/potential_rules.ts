@@ -163,9 +163,9 @@ export function ruleBranchFromRules(rules: RuleLeaf[], configurable_features: st
     }
 }
 
-function _potential_rules(branch: RuleBranch, context_features: string[], context_filters: Record<string, string>, context_matches: ContextMatch[]): RuleMatch[] {
+function _potential_rules(branch: RuleBranch, context_features: string[], context_filters: Map<string, string>, context_matches: ContextMatch[]): RuleMatch[] {
     let cf = context_features[context_matches.length];
-    let filter: string | null = context_filters[cf] ?? null;
+    let filter: string | null = context_filters.get(cf) ?? null;
     let ret: RuleMatch[] = [];
     if (context_matches.length == context_features.length - 1) {
         // we are at the bottom of the tree, add direct rules
@@ -208,7 +208,7 @@ function _potential_rules(branch: RuleBranch, context_features: string[], contex
     return ret
 }
 
-export function GetPotentialRules(branch: RuleBranch, configurable_features: string[], context_filters: Record<string, string>): PotentialRule[] {
+export function GetPotentialRules(branch: RuleBranch, configurable_features: string[], context_filters: Map<string, string>): PotentialRule[] {
     let results = _potential_rules(branch, configurable_features, context_filters, []);
     let blacklisted_indices = new Set<number>();
     let ret: PotentialRule[] = [];

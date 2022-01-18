@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Backdrop, Box, Button, Card, Icon, IconButton, Popover, SxProps, Theme, Typography} from "@mui/material";
+import {Box, IconButton, Popover, SxProps, Theme, Typography} from "@mui/material";
 import {Fragment} from "react";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -13,36 +13,30 @@ type ShortStringState = {
     popAnchor: HTMLButtonElement | null;
 }
 
-export class HiddenString extends React.Component<ShortStringProps, ShortStringState> {
-    constructor(props: ShortStringProps) {
-        super(props);
-        this.state = {
-            isOpen: false,
-            popAnchor: null,
-        };
+export function HiddenString(props:ShortStringProps){
+    const [state, setState] = React.useState<ShortStringState>({isOpen: false, popAnchor: null});
+
+    const copyContent = () => {
+        navigator.clipboard.writeText(props.value);
     }
 
-    handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-        this.setState({isOpen: true, popAnchor: event.currentTarget});
-    }
+    const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setState({isOpen: true, popAnchor: event.currentTarget});
+    };
 
-    handleClose = () => {
-        this.setState({isOpen: false});
-    }
+    const handleClose = () => {
+        setState({isOpen: false, popAnchor: null});
+    };
 
-    copyContent = () => {
-        navigator.clipboard.writeText(this.props.value);
-    }
+    const containerRef = React.useRef();
 
-
-    render() {
-        return (
-            <Fragment>
-                <IconButton onClick={this.handleOpen}><ExpandMoreIcon/></IconButton>
+    return (
+        <Box ref={containerRef}>
+                <IconButton onClick={handleOpen}><ExpandMoreIcon/></IconButton>
                 <Popover
-                    open={this.state.isOpen}
-                    onClick={this.handleClose}
-                    anchorEl={this.state.popAnchor!}
+                    open={state.isOpen}
+                    onClick={handleClose}
+                    anchorEl={state.popAnchor!}
                     anchorOrigin={{
                         vertical: 'bottom',
                         horizontal: 'center',
@@ -51,15 +45,15 @@ export class HiddenString extends React.Component<ShortStringProps, ShortStringS
                         vertical: 'top',
                         horizontal: 'center',
                     }}
+                    container={containerRef.current}
                 >
-                    <Box sx={{'padding': '5px'}}>
+                    <Box sx={{'padding': '5px'}} >
                         <Typography>
-                            {this.props.value}
-                            <IconButton onClick={this.copyContent}><ContentCopyIcon/></IconButton>
+                            {props.value}
+                            <IconButton onClick={copyContent}><ContentCopyIcon/></IconButton>
                         </Typography>
                     </Box>
                 </Popover>
-            </Fragment>
-        )
-    }
+            </Box>
+    );
 }
