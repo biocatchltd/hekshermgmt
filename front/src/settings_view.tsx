@@ -2,8 +2,8 @@ import {Fragment, useEffect, useRef, useState} from "react";
 import {Setting} from "./setting";
 import axios from 'axios';
 import {ModelGetSettings, ModelQuery, RuleSet} from "./index";
-import {Chip, ChipProps, CircularProgress, Fab, Grid, IconButton} from "@mui/material";
-import {GetPotentialRules} from "./potential_rules";
+import {Box, Card, Chip, ChipProps, CircularProgress, Fab, Grid, IconButton, Modal} from "@mui/material";
+import {getPotentialRules} from "./potential_rules";
 import MUIDataTable, {MUIDataTableColumn} from "mui-datatables";
 import BallotIcon from "@mui/icons-material/Ballot";
 import {TruncChip} from "./trunc_string";
@@ -16,6 +16,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {ResizableDrawer} from "./resizable_drawer";
 import * as React from "react";
 import {RulesView} from "./rules_view";
+import {ValueView} from "./value_view";
 
 const SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD = 50; // in milliseconds
 
@@ -90,7 +91,7 @@ export function SettingsView() {
         setRuleSet(ruleset);
     }, [queryResult, settings, contextFeatures])
 
-    const updateContextFilter = (cf: string, value: string|null) => {
+    const updateContextFilter = (cf: string, value: string | null) => {
         let new_filters = new Map(contextFilters);
         if (value === null) {
             new_filters.delete(cf);
@@ -111,8 +112,7 @@ export function SettingsView() {
         </Grid>)
     }
     let applicable_rules = settings.map(s =>
-        GetPotentialRules(ruleSet?.rules_per_setting.get(s.name)!, s.configurable_features, contextFilters))
-
+        getPotentialRules(ruleSet?.rules_per_setting.get(s.name)!, s.configurableFeatures, contextFilters))
     let data = settings.map((setting, i) => setting.to_row(contextFeatures!, applicable_rules[i]));
     let columns: (string | MUIDataTableColumn)[] = [
         {
@@ -144,9 +144,15 @@ export function SettingsView() {
             label: 'Default Value',
             options: {
                 customBodyRenderLite: (dataIndex) => {
+                    const [modalOpen, setModalOpen] = useState(false);
+
                     let setting = settings![dataIndex];
                     let value = setting.type.Format(setting.default_value);
-                    return <TruncChip value={value}/>
+                    let viewElement = setting.type.asViewElement(setting.default_value);
+
+                    return <ValueView expandedElement={viewElement} open={modalOpen} setOpen={setModalOpen}>
+                        <TruncChip value={value} chipProps={{onClick: () => setModalOpen(true)}}/>
+                    </ValueView>
                 }
             }
         },
@@ -173,7 +179,7 @@ export function SettingsView() {
                         } else {
                             value = setting.type.Format(rules[0].rule.value);
                         }
-                        return <TruncChip value={value} chip_props={sx}/>
+                        return <TruncChip value={value} chipProps={sx}/>
                     }
                 },
                 display: viewColumnPreference.current.get('value_for_context')
@@ -211,7 +217,8 @@ export function SettingsView() {
         <Fragment>
             <ThemeProvider theme={createTheme()}>
                 <ContextSelect context_options={ruleSet.context_options}
-                               filterChangeCallback={updateContextFilter}/>
+                               filterChangeCallback={updateContextFilter}
+                               stackProps={{direction: "row", justifyContent: "flex-start", spacing: 2}}/>
                 <MUIDataTable
                     title="Settings"
                     data={data}
@@ -255,10 +262,10 @@ export function SettingsView() {
                     onWidthChange={(w) => {
                         // since this update happens a lot, we only change the location of the button once every X
                         // millis todo is there a better way?
-                        if ((+ new Date()) - lastSetRulesPanelButtonRightTime.current
+                        if ((+new Date()) - lastSetRulesPanelButtonRightTime.current
                             > SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD) {
                             setRulesPanelButtonRight(w);
-                            lastSetRulesPanelButtonRightTime.current = + new Date();
+                            lastSetRulesPanelButtonRightTime.current = +new Date();
                         }
                     }}
                 >

@@ -6,14 +6,14 @@ export class Setting {
     name: string
     type: SettingType
     default_value: string
-    configurable_features: string[]
+    configurableFeatures: string[]
     metadata: Map<string, any>
 
     constructor(model: ModelGetSetting) {
         this.name = model.name;
         this.type = settingType(model.type);
         this.default_value = model.default_value;
-        this.configurable_features = model.configurable_features;
+        this.configurableFeatures = model.configurable_features;
         this.metadata = new Map<string, any>(Object.entries(model.metadata));
     }
 
@@ -22,7 +22,7 @@ export class Setting {
             name: this.name,
             type: this.type.toString(),
             default_value: this.type.asData(this.default_value),
-            configurable_features: this.configurable_features.join(', '),
+            configurable_features: this.configurableFeatures.join(', '),
         }
         // note that there's always at least one applicable rule, since we include the default
         if (applicable_rules.length > 1) {
@@ -38,7 +38,7 @@ export class Setting {
             ret["md." + key] = JSON.stringify(value);
         }
         for (let cf of context_feature_names) {
-            ret["cf." + cf] = this.configurable_features.includes(cf)
+            ret["cf." + cf] = this.configurableFeatures.includes(cf)
         }
         return ret
     }

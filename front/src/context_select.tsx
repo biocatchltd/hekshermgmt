@@ -1,14 +1,15 @@
 import * as React from "react";
-import {Autocomplete, Stack, TextField} from "@mui/material";
+import {Autocomplete, Stack, StackProps, TextField} from "@mui/material";
 
 type ContextSelectProps = {
     context_options: Map<string,Set<string>>
     filterChangeCallback: (key: string, value: string|null) => void
+    stackProps?: StackProps,
 }
 
 export function ContextSelect(props: ContextSelectProps){
     return (
-            <Stack direction="row" justifyContent="space-evenly">
+            <Stack {...props.stackProps}>
                 {Array.from(props.context_options.entries()).map(([key, values]) => {
                     let options = Array.from(values);
                     options.sort();

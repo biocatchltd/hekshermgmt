@@ -7,28 +7,16 @@ import {Fragment} from "react";
 
 type TruncChipProps = {
     value: string;
-    chip_props?: ChipProps;
+    chipProps?: ChipProps;
 }
 
-type TruncChipState = {
-    overflow: boolean;
-}
+export function TruncChip(props: TruncChipProps){
+    const [overflow, setOverflow] = React.useState(false);
+    let chip = <Chip {...props.chipProps} style={{'height':'30px'}} label={props.value}/>;
 
-export class TruncChip extends React.Component<TruncChipProps, TruncChipState> {
-    constructor(props: TruncChipProps) {
-        super(props);
-        this.state = {
-            overflow: false,
-        };
-    }
-
-    render() {
-        let chip = <Chip {...this.props.chip_props} label={this.props.value}/>;
-
-        return (
-            <Fragment>
-                <Stack direction="row" justifyContent="flex" alignItems="center">
-                    <Box style={{position: "relative", height: "20px", width: "100%"}}>
+    return <Fragment>
+                <Stack direction="row" justifyContent="flex" alignItems="center" >
+                    <Box style={{position: "relative", height: "30px", width: "100%"}}>
                         <Box style={{
                             position: "absolute",
                             right: 0,
@@ -44,17 +32,15 @@ export class TruncChip extends React.Component<TruncChipProps, TruncChipState> {
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                <DetectableOverflow onChange={(a: boolean) => {this.setState({overflow: a});}}>
+                                <DetectableOverflow onChange={(a: boolean) => {setOverflow(a);}}>
                                     {chip}
                                 </DetectableOverflow>
                             </Box>
                         </Box>
                     </Box>
-                    <Box style={{height: '20px'}}>
-                        {this.state.overflow && <HiddenString value={this.props.value}/>}
+                    <Box style={{height: '30px'}}>
+                        {overflow && <HiddenString value={props.value}/>}
                     </Box>
                 </Stack>
             </Fragment>
-        );
-    }
 }

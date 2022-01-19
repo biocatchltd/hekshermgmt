@@ -132,18 +132,16 @@ export class PotentialRule {
     }
 }
 
-export type RuleBranch = Record<string, RuleLeaf> | RuleNode  // the key "*" specified wildcard
-interface RuleNode extends Record<string, RuleBranch> {
-}
+export type RuleBranch = Map<string, RuleLeaf> | Map<string, RuleBranch>  // the key "*" specified wildcard
 
 export function ruleBranchFromRules(rules: RuleLeaf[], configurable_features: string[], depth: number = 0): RuleBranch {
     let cf = configurable_features[depth];
-    let ret: RuleBranch = {}
+    let ret: RuleBranch = new Map()
     if (depth == configurable_features.length - 1) {
         // we are at the bottom of the tree, add direct rules
-        let ret: RuleBranch = {};
         for (let rule of rules) {
-            ret[rule.context_features.get(cf) ?? "*"] = rule;
+            // @ts-ignore
+            ret.set(rule.context_features.get(cf) ?? "*", rule);
         }
         return ret;
     } else {
@@ -157,10 +155,22 @@ export function ruleBranchFromRules(rules: RuleLeaf[], configurable_features: st
             children[value].push(rule)
         }
         for (let value in children) {
-            ret[value] = ruleBranchFromRules(children[value], configurable_features, depth + 1)
+            // @ts-ignore
+            ret.set(value, ruleBranchFromRules(children[value], configurable_features, depth + 1))
         }
         return ret;
     }
+}
+export function getRules(rules: RuleBranch): RuleLeaf[] {
+    let ret: RuleLeaf[] = []
+    for (let value of rules.values()) {
+        if (value instanceof RuleLeaf) {
+            ret.push(value)
+        } else {
+            ret.push(...getRules(value))
+        }
+    }
+    return ret
 }
 
 function _potential_rules(branch: RuleBranch, context_features: string[], context_filters: Map<string, string>, context_matches: ContextMatch[]): RuleMatch[] {
@@ -170,45 +180,43 @@ function _potential_rules(branch: RuleBranch, context_features: string[], contex
     if (context_matches.length == context_features.length - 1) {
         // we are at the bottom of the tree, add direct rules
         if (filter !== null) {
-            let direct_match = branch[filter] as RuleLeaf | undefined;
+            let direct_match = branch.get(filter) as RuleLeaf | undefined;
             if (direct_match !== undefined) {
                 ret.push({'rule': direct_match, 'context_matches': [...context_matches, exact_match]})
             }
-            let wild_match = branch["*"] as RuleLeaf | undefined;
+            let wild_match = branch.get("*") as RuleLeaf | undefined;
             if (wild_match !== undefined) {
                 ret.push({'rule': wild_match, 'context_matches': [...context_matches, wildcard]})
             }
         } else {
-            for (let value in branch) {
-                let rule = branch[value] as RuleLeaf;
+            for (let [key, rule] of branch.entries()) {
                 ret.push({
-                    'rule': rule,
-                    'context_matches': [...context_matches, value == "*" ? presume_wildcard : value]
+                    'rule': rule as RuleLeaf,
+                    'context_matches': [...context_matches, key == "*" ? presume_wildcard : key]
                 })
             }
         }
     } else {
         // recurse
         if (filter !== null) {
-            let direct_match = branch[filter] as RuleBranch | undefined;
+            let direct_match = branch.get(filter) as RuleBranch | undefined;
             if (direct_match !== undefined) {
                 ret = ret.concat(_potential_rules(direct_match, context_features, context_filters, [...context_matches, exact_match]))
             }
-            let wild_match = branch["*"] as RuleBranch | undefined;
+            let wild_match = branch.get("*") as RuleBranch | undefined;
             if (wild_match !== undefined) {
                 ret = ret.concat(_potential_rules(wild_match, context_features, context_filters, [...context_matches, wildcard]))
             }
         } else {
-            for (let value in branch) {
-                let child = branch[value] as RuleBranch;
-                ret = ret.concat(_potential_rules(child, context_features, context_filters, [...context_matches, value == "*" ? presume_wildcard : value]))
+            for (let [key, child] of branch.entries()) {
+                ret = ret.concat(_potential_rules(child as RuleBranch, context_features, context_filters, [...context_matches, key == "*" ? presume_wildcard : key]))
             }
         }
     }
     return ret
 }
 
-export function GetPotentialRules(branch: RuleBranch, configurable_features: string[], context_filters: Map<string, string>): PotentialRule[] {
+export function getPotentialRules(branch: RuleBranch, configurable_features: string[], context_filters: Map<string, string>): PotentialRule[] {
     let results = _potential_rules(branch, configurable_features, context_filters, []);
     let blacklisted_indices = new Set<number>();
     let ret: PotentialRule[] = [];

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
-import {GetPotentialRules, RuleBranch, ruleBranchFromRules, RuleLeaf} from "./potential_rules";
+import {getPotentialRules, RuleBranch, ruleBranchFromRules, RuleLeaf} from "./potential_rules";
 import {Setting} from "./setting";
 import {SettingsView} from "./settings_view";
 
@@ -48,7 +48,7 @@ export class RuleSet {
             }))
 
             this.rules_per_setting.set(setting_name,
-                ruleBranchFromRules(uncollated_rules, setting.configurable_features));
+                ruleBranchFromRules(uncollated_rules, setting.configurableFeatures));
             for (let rule of uncollated_rules) {
                 for (let cf of context_features) {
                     let val = rule.context_features.get(cf);
