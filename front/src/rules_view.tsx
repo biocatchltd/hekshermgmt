@@ -16,13 +16,11 @@ export function RulesView(props: RulesViewProps) {
 
     return (
         <>
-            <Card>
+            <Card sx={{p:'16px'}}>
                 <Typography variant='h2' color="text.primary">{props.setting.name}</Typography>
-                <Stack direction='row'>
-                    <Typography>Type:</Typography>
-                    <TruncChip value={props.setting.type.toString()}/>
+                <Stack direction='row' alignItems="center" style={{margin: 'auto', height: '20px'}}>
+                    Type: <div style={{'width': '100%'}}><TruncChip value={props.setting.type.toString()}/></div>
                 </Stack>
-
             </Card>
         </>
     )

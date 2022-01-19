@@ -32,7 +32,7 @@ export function HiddenString(props:ShortStringProps){
 
     return (
         <Box ref={containerRef}>
-                <IconButton onClick={handleOpen}><ExpandMoreIcon/></IconButton>
+                <IconButton onClick={handleOpen} size="small"><ExpandMoreIcon/></IconButton>
                 <Popover
                     open={state.isOpen}
                     onClick={handleClose}

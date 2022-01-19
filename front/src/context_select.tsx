@@ -8,7 +8,7 @@ type ContextSelectProps = {
 
 export function ContextSelect(props: ContextSelectProps){
     return (
-            <Stack direction="row" justifyContent="space-evenly"  >
+            <Stack direction="row" justifyContent="space-evenly">
                 {Array.from(props.context_options.entries()).map(([key, values]) => {
                     let options = Array.from(values);
                     options.sort();

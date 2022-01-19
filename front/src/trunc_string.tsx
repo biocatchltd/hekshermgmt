@@ -44,15 +44,15 @@ export class TruncChip extends React.Component<TruncChipProps, TruncChipState> {
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                <DetectableOverflow onChange={(a: boolean) => {
-                                    this.setState({overflow: a});
-                                }}>
+                                <DetectableOverflow onChange={(a: boolean) => {this.setState({overflow: a});}}>
                                     {chip}
                                 </DetectableOverflow>
                             </Box>
                         </Box>
                     </Box>
-                    {this.state.overflow && <HiddenString value={this.props.value}/>}
+                    <Box style={{height: '20px'}}>
+                        {this.state.overflow && <HiddenString value={this.props.value}/>}
+                    </Box>
                 </Stack>
             </Fragment>
         );
