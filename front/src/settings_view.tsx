@@ -2,7 +2,19 @@ import {Fragment, useEffect, useRef, useState} from "react";
 import {Setting} from "./setting";
 import axios from 'axios';
 import {ModelGetSettings, ModelQuery, RuleSet} from "./index";
-import {Box, Card, Chip, ChipProps, CircularProgress, Fab, Grid, IconButton, Modal} from "@mui/material";
+import {
+    Box,
+    Card,
+    Chip,
+    ChipProps,
+    CircularProgress,
+    Fab,
+    Grid,
+    IconButton,
+    List,
+    ListItem, ListItemButton, ListItemText,
+    Modal, Stack
+} from "@mui/material";
 import {getPotentialRules} from "./potential_rules";
 import MUIDataTable, {MUIDataTableColumn} from "mui-datatables";
 import BallotIcon from "@mui/icons-material/Ballot";
@@ -16,7 +28,8 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {ResizableDrawer} from "./resizable_drawer";
 import * as React from "react";
 import {RulesView} from "./rules_view";
-import {ValueView} from "./value_view";
+import {ValueDialog} from "./value_dialog";
+import {RuleOptionsView} from "./rule_options_view";
 
 const SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD = 50; // in milliseconds
 
@@ -33,6 +46,9 @@ export function SettingsView() {
     const [rulesPanelButtonRight, setRulesPanelButtonRight] = useState<number>(0);
 
     const [rulesPanelSetting, setRulesPanelSetting] = useState<Setting | null>(null);
+    const [rulesPanelContextFilter, setRulesPanelContextFilter] = useState<Map<string, string> | null>(null);
+
+    const [valueViewProps, setValueViewProps] = useState<{ title: string; element: JSX.Element; } | null>(null);
 
     let base_url;
     let base_headers = {};
@@ -144,15 +160,15 @@ export function SettingsView() {
             label: 'Default Value',
             options: {
                 customBodyRenderLite: (dataIndex) => {
-                    const [modalOpen, setModalOpen] = useState(false);
-
                     let setting = settings![dataIndex];
                     let value = setting.type.Format(setting.default_value);
-                    let viewElement = setting.type.asViewElement(setting.default_value);
 
-                    return <ValueView expandedElement={viewElement} open={modalOpen} setOpen={setModalOpen}>
-                        <TruncChip value={value} chipProps={{onClick: () => setModalOpen(true)}}/>
-                    </ValueView>
+                    return <TruncChip value={value} chipProps={{
+                        onClick: () => setValueViewProps({
+                            title: `${setting.name} default value`,
+                            element: setting.type.asViewElement(setting.default_value),
+                        })
+                    }}/>
                 }
             }
         },
@@ -164,23 +180,47 @@ export function SettingsView() {
                     // note that there's always at least one applicable rule, since we include the default
                     let setting = settings![dataIndex];
                     let rules = applicable_rules[dataIndex];
+                    let chip: JSX.Element;
                     if (rules.length > 1) {
                         let tooltip = `${rules.length} possible values:\n`
                             + rules.map(r => r.get_assumptions_string() + ' => ' + r.rule.value).join('\n');
-                        return <ExpandChip value={'<' + rules.length + ' Options>'} tooltip={tooltip}
-                                           chip_props={{color: 'primary'}}/>
+                        chip = <ExpandChip value={'<' + rules.length + ' Options>'} tooltip={tooltip}
+                                           chip_props={{
+                                               color: 'primary',
+                                               onClick: () => setValueViewProps({
+                                                   title: `${rules.length} Options for ${setting.name}:`,
+                                                   element: <RuleOptionsView options={rules} type={setting.type}/>,
+                                               })
+                                           }}/>
                     } else {
-                        let value;
+                        let value: any;
+                        let viewTitle: string;
                         let sx: ChipProps = {color: 'primary'};
                         if (rules[0].rule.rule_id === -1) {
                             // default rule
-                            value = setting.type.Format(setting.default_value)
+                            value = setting.default_value;
                             sx = {color: 'default'};
+                            viewTitle = `${setting.name} default value`;
                         } else {
-                            value = setting.type.Format(rules[0].rule.value);
+                            value = rules[0].rule.value;
+                            viewTitle = `${setting.name} value for rule ${rules[0].rule.rule_id}`;
                         }
-                        return <TruncChip value={value} chipProps={sx}/>
+                        chip = <TruncChip value={setting.type.Format(value)} chipProps={{
+                            onClick: () => setValueViewProps({
+                                title: viewTitle,
+                                element: setting.type.asViewElement(value),
+                            }), ...sx
+                        }}/>
                     }
+
+                    return <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                        <div style={{'flexGrow': '1'}}>{chip}</div>
+                        <IconButton onClick={()=>{
+                            setRulesPanelOpen(true);
+                            setRulesPanelSetting(setting);
+                            setRulesPanelContextFilter(contextFilters)
+                        }}><BallotIcon/></IconButton>
+                    </div>;
                 },
                 display: viewColumnPreference.current.get('value_for_context')
                     ?? contextFilters.size > 0
@@ -271,9 +311,15 @@ export function SettingsView() {
                 >
                     {rulesPanelSetting !== null &&
                         <RulesView setting={rulesPanelSetting}
-                                   rules={ruleSet.rules_per_setting.get(rulesPanelSetting.name)!}/>
+                                   rules={ruleSet.rules_per_setting.get(rulesPanelSetting.name)!}
+                                   initialContextFilter={rulesPanelContextFilter ?? undefined}
+                        />
                     }
                 </ResizableDrawer>
+                <ValueDialog open={valueViewProps !== null} onClose={() => setValueViewProps(null)}
+                             title={valueViewProps !== null ? valueViewProps.title : ""}>
+                    {valueViewProps !== null && valueViewProps.element}
+                </ValueDialog>
             </ThemeProvider>
         </Fragment>
     )

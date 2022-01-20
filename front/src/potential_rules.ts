@@ -111,24 +111,24 @@ export class RuleLeaf {
 
 export class PotentialRule {
     rule: RuleLeaf
-    assumptions: Record<string, string>
+    assumptions: Map<string, string>
 
     constructor(match: RuleMatch, context_features: string[]) {
         this.rule = match.rule
-        this.assumptions = {}
+        this.assumptions = new Map()
         for (let i in match.context_matches) {
             let match_element = match.context_matches[i]
             let cf = context_features[i]
             if (match_element === presume_wildcard) {
-                this.assumptions[cf] = '*'
+                this.assumptions.set(cf, '*')
             } else if (typeof match_element === 'string') {
-                this.assumptions[cf] = match_element
+                this.assumptions.set(cf, match_element)
             }
         }
     }
 
     get_assumptions_string(): string {
-        return Object.entries(this.assumptions).map(([cf, value]) => `${cf}: ${value}`).join(', ')
+        return Array.from(this.assumptions.entries()).map(([cf, value]) => `${cf}: ${value}`).join(', ')
     }
 }
 

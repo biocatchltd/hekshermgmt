@@ -4,6 +4,7 @@ import {Autocomplete, Stack, StackProps, TextField} from "@mui/material";
 type ContextSelectProps = {
     context_options: Map<string,Set<string>>
     filterChangeCallback: (key: string, value: string|null) => void
+    initialValue?: Map<string, string>
     stackProps?: StackProps,
 }
 
@@ -20,7 +21,7 @@ export function ContextSelect(props: ContextSelectProps){
                             options={["<none>", ...options]} sx={{ maxWidth: 300 }}
                             onChange={(event, value:string|null) => {
                                 props.filterChangeCallback(key, value)
-                            }}
+                            }} value={props.initialValue?.get(key)}
                         />
                     )
                 })}

@@ -2,8 +2,9 @@ import {Collapse, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Ty
 import {ExpandLess, ExpandMore} from "@mui/icons-material";
 import ExtensionIcon from '@mui/icons-material/Extension';
 import ExtensionOffIcon from '@mui/icons-material/ExtensionOff';
+import * as React from "react";
 import {useState} from "react";
-import {ValueView} from "./value_view";
+import {ValueDialog} from "./value_dialog";
 
 export interface SettingType {
     toString(): string;
@@ -192,19 +193,26 @@ type SequenceViewProps = {
     values: any[];
 }
 
+
 function SequenceView(props: SequenceViewProps) {
-    return <List>
-        {props.values.map((v, i) => {
-            let [open, setOpen] = useState(false);
-            return <ListItem key={i}>
-                <ListItemButton onClick={() => setOpen(true)}>
-                    <ValueView open={open} setOpen={setOpen} expandedElement={props.elementType.asViewElement(v)}>
+    const [dialogTarget, setDialogTarget] = useState<{index:number, element: JSX.Element} | null>(null);
+
+    return <>
+        <List>
+            {props.values.map((v, i) => {
+                return <ListItem key={i.toString()}>
+                    <ListItemButton onClick={() => setDialogTarget(
+                        {element: props.elementType.asViewElement(v), index: i})}
+                    >
                         <ListItemText primary={props.elementType.Format(v)}/>
-                    </ValueView>
-                </ListItemButton>
-            </ListItem>
-        })}
-    </List>
+                    </ListItemButton>
+                </ListItem>
+            })}
+        </List>
+        <ValueDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)} title={`index # ${dialogTarget?.index}`}>
+            {dialogTarget?.element}
+        </ValueDialog>
+    </>
 }
 
 class SequenceSettingType implements SettingType {
@@ -235,8 +243,34 @@ class SequenceSettingType implements SettingType {
     asViewElement(value: any[]): JSX.Element {
         return <SequenceView elementType={this.elementType} values={value}/>
     }
+}
+
+type MappingViewProps = {
+    valueType: SettingType;
+    entries: [key: string, value: any][];
+}
 
 
+function MappingView(props: MappingViewProps) {
+    const [dialogTarget, setDialogTarget] = useState<{key:string, element: JSX.Element} | null>(null);
+
+    return <>
+        <List>
+            {props.entries.map(([k,v], i) => {
+                return <ListItem key={i.toString()}>
+                    <ListItemText primary={k+": "}/>
+                    <ListItemButton onClick={() => setDialogTarget(
+                        {element: props.valueType.asViewElement(v), key: k})}
+                    >
+                        <ListItemText primary={props.valueType.Format(v)}/>
+                    </ListItemButton>
+                </ListItem>
+            })}
+        </List>
+        <ValueDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)} title={`key "${dialogTarget?.key}"`}>
+            {dialogTarget?.element}
+        </ValueDialog>
+    </>
 }
 
 
@@ -259,8 +293,10 @@ class MapSettingType implements SettingType {
         return this.Format(value);
     }
 
-    asViewElement(value: any[]): JSX.Element {
-        return <span>TODO!</span>
+    asViewElement(value: any): JSX.Element {
+        let entries = Object.entries(value);
+        entries.sort(([k1,], [k2,]) => k1.localeCompare(k2));
+        return <MappingView entries={entries} valueType={this.valueType}/>
     }
 }
 
