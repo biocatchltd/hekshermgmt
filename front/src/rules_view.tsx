@@ -5,7 +5,7 @@ import {Card, Stack, Typography, Collapse, Link, Fab} from "@mui/material";
 import {TruncChip} from "./trunc_string";
 import {ContextSelect} from "./context_select";
 import {TransitionGroup} from "react-transition-group";
-import {ValueDialog} from "./value_dialog";
+import {ValueViewDialog} from "./value_dialog";
 import AddIcon from '@mui/icons-material/Add';
 
 type RuleCardProps = {
@@ -43,7 +43,7 @@ type RulesViewProps = {
 export function RulesView(props: RulesViewProps) {
     const [partialContext, setPartialContext] = React.useState(props.initialContextFilter
         ?? new Map<string, string>());
-    const [valueProps, setValueProps] = React.useState<{
+    const [valueViewDialogProps, setValueViewDialogProps] = React.useState<{
         title: string
         element: JSX.Element,
     } | null>(null);
@@ -88,7 +88,7 @@ export function RulesView(props: RulesViewProps) {
                 <TransitionGroup>
                     {applicableRules.map(rule =>
                         <Collapse key={rule.rule.rule_id} style={{padding: 3}}>
-                            <RuleCard potentialRule={rule} setting={props.setting} onValueClick={() => setValueProps({
+                            <RuleCard potentialRule={rule} setting={props.setting} onValueClick={() => setValueViewDialogProps({
                                 title: rule.rule.rule_id === -1 ? "Default Value" : `Rule #${rule.rule.rule_id}`,
                                 element: props.setting.type.asViewElement(rule.rule.value)
                             })}/>
@@ -96,12 +96,12 @@ export function RulesView(props: RulesViewProps) {
                     )}
                 </TransitionGroup>
             </Stack>
-            <ValueDialog open={valueProps !== null} onClose={() => setValueProps(null)} title={valueProps?.title ?? ""}>
-                {valueProps !== null ? valueProps?.element : null}
-            </ValueDialog>
-            <Fab onClick={() => setValueProps({
+            <ValueViewDialog open={valueViewDialogProps !== null} onClose={() => setValueViewDialogProps(null)} title={valueViewDialogProps?.title ?? ""}>
+                {valueViewDialogProps !== null ? valueViewDialogProps?.element : null}
+            </ValueViewDialog>
+            <Fab onClick={() => setValueViewDialogProps({
                                 title: "Add Value",
-                                element: props.setting.type.asEditElement(props.setting.default_value, (a: any) => {})
+                                element: props.setting.type.asEditElement(props.setting.default_value, (a: any) => {}, (a: any) => {})
                             })}
                  style={{
                          position: "absolute",

@@ -3,7 +3,7 @@ import {Dialog, DialogContent, DialogTitle, Paper, PaperProps} from "@mui/materi
 import Draggable from "react-draggable";
 import * as React from "react";
 
-type ValueModalProps = {
+type ValueViewDialogProps = {
     open: boolean;
     onClose: () => void,
     children: ReactNode;
@@ -21,7 +21,7 @@ function PaperComponent(props: PaperProps) {
     );
 }
 
-export function ValueDialog(props: ValueModalProps) {
+export function ValueViewDialog(props: ValueViewDialogProps) {
     return <Dialog open={props.open}
                    onClose={
                        props.onClose
@@ -39,4 +39,11 @@ export function ValueDialog(props: ValueModalProps) {
             </div>
         </DialogContent>
     </Dialog>;
+}
+
+type ValueEditDialogProps = {
+    open: boolean;
+    onClose: () => void,
+    children: ReactNode;
+    title: string;
 }

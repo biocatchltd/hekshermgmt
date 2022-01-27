@@ -2,7 +2,7 @@ import {PotentialRule} from "./potential_rules";
 import {List, ListItem, ListItemButton, ListItemText} from "@mui/material";
 import * as React from "react";
 import {useState} from "react";
-import {ValueDialog} from "./value_dialog";
+import {ValueViewDialog} from "./value_dialog";
 import {SettingType} from "./setting_type";
 
 type RuleOptionsViewProps = {
@@ -23,8 +23,8 @@ export function RuleOptionsView(props: RuleOptionsViewProps) {
                     </ListItemButton>
                 </ListItem>)}
         </List>
-        <ValueDialog open={dialogTarget !== null} onClose={()=>setDialogTarget(null)} title={dialogTarget?.get_assumptions_string() ?? ""}>
+        <ValueViewDialog open={dialogTarget !== null} onClose={()=>setDialogTarget(null)} title={dialogTarget?.get_assumptions_string() ?? ""}>
             {dialogTarget !== null ? props.type.asViewElement(dialogTarget.rule.value): null}
-        </ValueDialog>
+        </ValueViewDialog>
     </>
 }

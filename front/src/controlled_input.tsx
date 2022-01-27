@@ -9,22 +9,37 @@ import {
 } from "@mui/material";
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {primitive_to_str} from "./setting_type";
 
 type ControlledTextFieldProps = {
     initialValue: string
     textFieldProps: TextFieldProps
     onChange: (s: string) => void
+    onValidityChange?: (err: string) => void
+    errorMsg?: (s: string) => (string|null)
 }
 
 export function ControlledTextField(props: ControlledTextFieldProps) {
     let [value, setValue] = useState<string>(props.initialValue)
+    let [errorText, setErrorText] = useState("");
+
+    if (props.errorMsg !== undefined){
+        useEffect(()=>{
+            let msg = props.errorMsg!(value)
+            setErrorText(msg ?? "")
+        }, [value])
+        if (props.onValidityChange !== undefined){
+            useEffect(()=>{
+                props.onValidityChange!(errorText);
+            }, [errorText])
+        }
+    }
 
     return <TextField {...props.textFieldProps} value={value} onChange={e => {
         props.onChange(e.target.value);
         setValue(e.target.value);
-    }}/>
+    }} error={errorText!=""} helperText={errorText}/>
 }
 
 type ControlledSwitchProps = {
@@ -57,7 +72,7 @@ export function ControlledRadioGroup(props: ControlledRadioGroupProps) {
         setValue(e.target.value)
     }}>
         {props.options.map((v, i) =>
-            <FormControlLabel control={<Radio/>} label={props.optionLabels[i]} value={v}/>
+            <FormControlLabel control={<Radio/>} label={props.optionLabels[i]} value={v} key={i}/>
         )}
     </RadioGroup>
 }

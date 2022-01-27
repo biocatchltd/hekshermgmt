@@ -28,7 +28,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {ResizableDrawer} from "./resizable_drawer";
 import * as React from "react";
 import {RulesView} from "./rules_view";
-import {ValueDialog} from "./value_dialog";
+import {ValueViewDialog} from "./value_dialog";
 import {RuleOptionsView} from "./rule_options_view";
 
 const SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD = 50; // in milliseconds
@@ -316,10 +316,10 @@ export function SettingsView() {
                         />
                     }
                 </ResizableDrawer>
-                <ValueDialog open={valueViewProps !== null} onClose={() => setValueViewProps(null)}
-                             title={valueViewProps !== null ? valueViewProps.title : ""}>
+                <ValueViewDialog open={valueViewProps !== null} onClose={() => setValueViewProps(null)}
+                                 title={valueViewProps !== null ? valueViewProps.title : ""}>
                     {valueViewProps !== null && valueViewProps.element}
-                </ValueDialog>
+                </ValueViewDialog>
             </ThemeProvider>
         </Fragment>
     )

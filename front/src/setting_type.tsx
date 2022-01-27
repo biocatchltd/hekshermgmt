@@ -9,7 +9,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RemoveIcon from '@mui/icons-material/Remove';
 import * as React from "react";
 import {useEffect, useState} from "react";
-import {ValueDialog} from "./value_dialog";
+import {ValueViewDialog} from "./value_dialog";
 import {ControlledRadioGroup, ControlledSwitch, ControlledTextField, ControlledTransferList} from "./controlled_input";
 import AddIcon from '@mui/icons-material/Add';
 import {TransitionGroup} from "react-transition-group";
@@ -24,7 +24,7 @@ export interface SettingType<T> {
 
     asViewElement(value: T): JSX.Element;
 
-    asEditElement(value: T, onChange: (new_value: T) => void): JSX.Element;
+    asEditElement(value: T, onChange: (new_value: T) => void, onValidChange: (newError: string | null) => void): JSX.Element;
 
     editElementShort(): boolean;
 
@@ -48,7 +48,7 @@ class StrSettingType implements SettingType<string> {
         return <Typography color="text.primary">{value}</Typography>;
     }
 
-    asEditElement(value: string, onChange: (new_value: string) => void): JSX.Element {
+    asEditElement(value: string, onChange: (new_value: string) => void, onValidChange: (newError: string | null) => void): JSX.Element {
         return <ControlledTextField textFieldProps={{multiline: true}} initialValue={value} onChange={onChange}/>;
     }
 
@@ -78,10 +78,13 @@ class IntSettingType implements SettingType<number> {
         return <Typography color="text.primary">{value}</Typography>;
     }
 
-    asEditElement(value: number, onChange: (new_value: number) => void): JSX.Element {
-        return <ControlledTextField textFieldProps=
-                                        {{multiline: true, inputProps: {inputMode: 'numeric', pattern: '(+|-)?[0-9]*'}}}
-                                    initialValue={value.toString()} onChange={s => onChange(parseInt(s))}/>;
+    asEditElement(value: number, onChange: (new_value: number) => void, onValidChange: (newError: string | null) => void): JSX.Element {
+        return <ControlledTextField textFieldProps={{multiline: true,}}
+                                    initialValue={value.toString()}
+                                    onChange={s => onChange(parseInt(s))}
+                                    errorMsg={s => s.match(/^([+\-])?[0-9]*$/) ? null :
+                                        "value must be a whole number"}
+                                    onValidityChange={onValidChange}/>;
     }
 
     editElementShort(): boolean {
@@ -110,7 +113,7 @@ class BoolSettingType implements SettingType<boolean> {
         return <Typography color="text.primary">{value ? "True" : "False"}</Typography>;
     }
 
-    asEditElement(value: boolean, onChange: (new_value: boolean) => void): JSX.Element {
+    asEditElement(value: boolean, onChange: (new_value: boolean) => void, onValidChange: (newError: string | null) => void): JSX.Element {
         return <ControlledSwitch initialValue={value} onChange={onChange}/>
     }
 
@@ -140,13 +143,13 @@ class FloatSettingType implements SettingType<number> {
         return <Typography color="text.primary">{value}</Typography>;
     }
 
-    asEditElement(value: number, onChange: (new_value: number) => void): JSX.Element {
-        return <ControlledTextField textFieldProps=
-                                        {{
-                                            multiline: true,
-                                            inputProps: {inputMode: 'numeric', pattern: '(+|-)?[0-9]+(\.[0-9]+)?'}
-                                        }}
-                                    initialValue={value.toString()} onChange={s => onChange(parseFloat(s))}/>;
+    asEditElement(value: number, onChange: (new_value: number) => void, onValidChange: (newError: string | null) => void): JSX.Element {
+        return <ControlledTextField textFieldProps={{multiline: true,}}
+                                    initialValue={value.toString()}
+                                    onChange={s => onChange(parseFloat(s))}
+                                    errorMsg={s => s.match(/^([+\-])?[0-9]+(\.[0-9]+)?$/) ? null :
+                                        "value must be a number"}
+                                    onValidityChange={onValidChange}/>;
     }
 
     editElementShort(): boolean {
@@ -191,7 +194,7 @@ class EnumSettingType implements SettingType<number | boolean | string> {
         return <Typography color="text.primary">{valueView}</Typography>;
     }
 
-    asEditElement(value: number | boolean | string, onChange: (new_value: (number | boolean | string)) => void): JSX.Element {
+    asEditElement(value: number | boolean | string, onChange: (new_value: (number | boolean | string)) => void, onValidChange: (newError: string | null) => void): JSX.Element {
         return <ControlledRadioGroup options={this.values} optionLabels={this.values.map(primitive_to_str)}
                                      initialValue={value} onChange={onChange}/>
     }
@@ -275,7 +278,7 @@ class FlagsSettingType implements SettingType<(number | boolean | string)[]> {
         return value.map((v: any) => JSON.stringify(v));
     }
 
-    asEditElement(value: (number | boolean | string)[], onChange: (new_value: (number | boolean | string)[]) => void): JSX.Element {
+    asEditElement(value: (number | boolean | string)[], onChange: (new_value: (number | boolean | string)[]) => void, onValidChange: (newError: string | null) => void): JSX.Element {
         let included = new Set(value);
         let excluded = new Set(this.values.filter(a => !included.has(a)))
         return <ControlledTransferList initialExcluded={excluded} initialIncluded={included} onChange={onChange}/>
@@ -312,32 +315,48 @@ function SequenceView(props: SequenceViewProps) {
                 </ListItem>
             })}
         </List>
-        <ValueDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
-                     title={`index # ${dialogTarget?.index}`}>
+        <ValueViewDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
+                         title={`index # ${dialogTarget?.index}`}>
             {dialogTarget?.element}
-        </ValueDialog>
+        </ValueViewDialog>
     </>
 }
 
-type BaseSequenceEditProps ={
-    element_factory: (v: any, i: number, cb: ((v: any) => void)) => JSX.Element
-    initalValue: any[]
+type BaseSequenceEditProps = {
+    elementFactory: (v: any, i: number, cb: ((v: any) => void), vcb: ((v: any) => void)) => JSX.Element
+    initialValue: any[]
     elementType: SettingType<any>
     onChange: (v: any[]) => void
+    onValidityChange: (err: string) => void
 }
 
-function BaseSequenceEdit(props: BaseSequenceEditProps){
-    // each key of each item is a 3-tuple of a value, const key and version
-    const [items, setItems] = useState(props.initalValue.map((v) => [v, uuid(), 0]))
-    const [dialogTarget, setDialogTarget] = useState<{ index: number, element: JSX.Element } | null>(null);
+function BaseSequenceEdit(props: BaseSequenceEditProps) {
+    // each item is a tuple of a value, const key, and error
+    const [items, setItems] = useState(props.initialValue.map((v) => [v, uuid(), ""]))
 
     useEffect(() => {
         props.onChange(items.map((v) => v[0]))
+        let error = "";
+        for (let item of items){
+            if (item[2]){
+                error = "index 2#: " + item[2]
+                break
+            }
+        }
+        props.onValidityChange(error)
     }, [items])
 
     const handleAdd = (v: any, idx: number) => () => {
         let newItems = items.slice();
-        newItems.splice(idx, 0, [v, uuid(), 0]);
+        newItems.splice(idx, 0, [v, uuid(), ""]);
+        setItems(newItems);
+    }
+
+    const handleAddToEnd = () => () => {
+        let newItems = items.slice();
+        newItems.splice(items.length, 0, [
+            items.length == 0 ? props.elementType.defaultValue() : items[items.length - 1][0],
+            uuid(), ""]);
         setItems(newItems);
     }
 
@@ -347,164 +366,9 @@ function BaseSequenceEdit(props: BaseSequenceEditProps){
         setItems(newItems);
     }
 
-    const handleMoveUp = (idx: number) => () => {
+    const handleErrorChange = (idx: number) => (e: string) => {
         let newItems = items.slice();
-        [newItems[idx - 1], newItems[idx]] = [newItems[idx], newItems[idx - 1]];
-        setItems(newItems);
-    }
-
-    const handleMoveDown = (idx: number) => handleMoveUp(idx + 1);
-
-    const handleRemove = (idx: number) => () => {
-        let newItems = items.slice();
-        newItems.splice(idx, 1);
-        setItems(newItems);
-    }
-
-    return <>
-        <List>
-            <TransitionGroup>
-                {
-                    items.map((v, i) => {
-                        return <Collapse key={[v[1], v[2]].toString()}>
-                            <Divider textAlign="right">
-                                <IconButton size="small" onClick={handleAdd(v[0], i)}>
-                                    <AddIcon/>
-                                </IconButton>
-                            </Divider>
-                            <ListItem>
-                                <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                                    <div style={{'flexGrow': '1'}}>
-                                        {props.element_factory(v[0],i, handleEdit(i))}
-                                    </div>
-                                    <Stack spacing={0}>
-                                    <IconButton size="small" disabled={i == 0} onClick={handleMoveUp(i)}
-                                                sx={{my: "0px"}}>
-                                        <ArrowDropUpIcon/>
-                                    </IconButton>
-                                    <IconButton size="small" onClick={handleRemove(i)} sx={{my: "-15px"}}>
-                                        <RemoveIcon/>
-                                    </IconButton>
-                                    <IconButton size="small" disabled={i == items.length - 1}
-                                                onClick={handleMoveDown(i)}
-                                                sx={{my: "0px"}}>
-                                        <ArrowDropDownIcon/>
-                                    </IconButton>
-                                </Stack>
-                                </div>
-                            </ListItem>
-                        </Collapse>
-                    })
-                }
-            </TransitionGroup>
-        </List>
-        <ValueDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
-                     title={`index # ${dialogTarget?.index}`}>
-            {dialogTarget?.element}
-        </ValueDialog>
-    </>
-}
-
-function LongSequenceEdit(props: SequenceEditProps) {
-    // each key of each item is a 3-tuple of a value, const key and version
-    const [items, setItems] = useState(props.initalValue.map((v) => [v, uuid(), 0]))
-    const [dialogTarget, setDialogTarget] = useState<{ index: number, element: JSX.Element } | null>(null);
-
-    useEffect(() => {
-        props.onChange(items.map((v) => v[0]))
-    }, [items])
-
-    const handleAdd = (v: any, idx: number) => () => {
-        let newItems = items.slice();
-        newItems.splice(idx, 0, [v, uuid(), 0]);
-        setItems(newItems);
-    }
-
-    const handleEdit = (idx: number) => (v: any) => {
-        let newItems = items.slice();
-        newItems[idx][0] = v;
-        setItems(newItems);
-    }
-
-    const handleMoveUp = (idx: number) => () => {
-        let newItems = items.slice();
-        [newItems[idx - 1], newItems[idx]] = [newItems[idx], newItems[idx - 1]];
-        setItems(newItems);
-    }
-
-    const handleMoveDown = (idx: number) => handleMoveUp(idx + 1);
-
-    const handleRemove = (idx: number) => () => {
-        let newItems = items.slice();
-        newItems.splice(idx, 1);
-        setItems(newItems);
-    }
-
-    return <>
-        <List>
-            <TransitionGroup>
-                {
-                    items.map((v, i) => {
-                        return <Collapse key={[v[1], v[2]].toString()}>
-                            <Divider textAlign="right">
-                                <IconButton size="small" onClick={handleAdd(v[0], i)}>
-                                    <AddIcon/>
-                                </IconButton>
-                            </Divider>
-                            <ListItem>
-                                <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                                    <div style={{'flexGrow': '1'}}>
-                                        <ListItemButton onClick={() => setDialogTarget(
-                                            {element: props.elementType.asEditElement(v[0], handleEdit(i)), index: i})}
-                                        >
-                                            <ListItemText primary={props.elementType.Format(v[0])}/>
-                                        </ListItemButton>
-                                    </div>
-                                    <Stack spacing={0}>
-                                    <IconButton size="small" disabled={i == 0} onClick={handleMoveUp(i)}
-                                                sx={{my: "0px"}}>
-                                        <ArrowDropUpIcon/>
-                                    </IconButton>
-                                    <IconButton size="small" onClick={handleRemove(i)} sx={{my: "-15px"}}>
-                                        <RemoveIcon/>
-                                    </IconButton>
-                                    <IconButton size="small" disabled={i == items.length - 1}
-                                                onClick={handleMoveDown(i)}
-                                                sx={{my: "0px"}}>
-                                        <ArrowDropDownIcon/>
-                                    </IconButton>
-                                </Stack>
-                                </div>
-                            </ListItem>
-                        </Collapse>
-                    })
-                }
-            </TransitionGroup>
-        </List>
-        <ValueDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
-                     title={`index # ${dialogTarget?.index}`}>
-            {dialogTarget?.element}
-        </ValueDialog>
-    </>
-}
-
-function ShortSequenceEdit(props: SequenceEditProps) {
-    // each key of each item is a 3-tuple of a value, const key and version
-    const [items, setItems] = useState(props.initalValue.map((v) => [v, uuid(), 0]))
-
-    useEffect(() => {
-        props.onChange(items.map((v) => v[0]))
-    }, [items])
-
-    const handleAdd = (v: any, idx: number) => () => {
-        let newItems = items.slice();
-        newItems.splice(idx, 0, [v, uuid(), 0]);
-        setItems(newItems);
-    }
-
-    const handleEdit = (idx: number) => (v: any) => {
-        let newItems = items.slice();
-        newItems[idx][0] = v;
+        newItems[idx][2] = e;
         setItems(newItems);
     }
 
@@ -526,7 +390,7 @@ function ShortSequenceEdit(props: SequenceEditProps) {
         <TransitionGroup>
             {
                 items.map((v, i) => {
-                    return <Collapse key={[v[1], v[2]].toString()}>
+                    return <Collapse key={[v[1]].toString()}>
                         <Divider textAlign="right">
                             <IconButton size="small" onClick={handleAdd(v[0], i)}>
                                 <AddIcon/>
@@ -535,7 +399,9 @@ function ShortSequenceEdit(props: SequenceEditProps) {
                         <ListItem>
                             <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                                 <div style={{'flexGrow': '1'}}>
-                                    {props.elementType.asEditElement(v[0], handleEdit(i))}
+                                    {
+                                        props.elementFactory(v[0], i, handleEdit(i), handleErrorChange(i))
+                                    }
                                 </div>
                                 <Stack spacing={0}>
                                     <IconButton size="small" disabled={i == 0} onClick={handleMoveUp(i)}
@@ -554,17 +420,47 @@ function ShortSequenceEdit(props: SequenceEditProps) {
                             </div>
                         </ListItem>
                     </Collapse>
-                })}
+                })
+            }
         </TransitionGroup>
-        <Divider textAlign="right">
-            <IconButton size="small" onClick={
-                handleAdd(items.length == 0 ? props.elementType.defaultValue() : items[items.length - 1][0],
-                    items.length)
-            }>
+        <Divider textAlign="right" key={items.length}>
+            <IconButton size="small" onClick={handleAddToEnd()}>
                 <AddIcon/>
             </IconButton>
         </Divider>
     </List>
+}
+
+type SequenceEditProps = {
+    initialValue: any[]
+    elementType: SettingType<any>
+    onChange: (v: any[]) => void
+    onValidityChange: (err: string) => void
+}
+
+function LongSequenceEdit(props: SequenceEditProps) {
+    const [dialogTarget, setDialogTarget] = useState<{ index: number, element: JSX.Element } | null>(null);
+    return <>
+        <BaseSequenceEdit elementFactory={(v, i, cb, vcb) =>
+            <ListItemButton onClick={() => setDialogTarget(
+                {element: props.elementType.asEditElement(v, cb, vcb), index: i})}
+            >
+                <ListItemText primary={props.elementType.Format(v)}/>
+            </ListItemButton>
+        } {...props}/>
+        <ValueViewDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
+                         title={`index # ${dialogTarget?.index}`}>
+            {dialogTarget?.element}
+        </ValueViewDialog>
+    </>
+}
+
+function ShortSequenceEdit(props: SequenceEditProps) {
+    return <>
+        <BaseSequenceEdit elementFactory={(v, i, cb, vcb) =>
+            props.elementType.asEditElement(v, cb, vcb)
+        } {...props}/>
+    </>
 }
 
 class SequenceSettingType<E> implements SettingType<E[]> {
@@ -596,11 +492,17 @@ class SequenceSettingType<E> implements SettingType<E[]> {
         return <SequenceView elementType={this.elementType} values={value}/>
     }
 
-    asEditElement(value: E[], onChange: (new_value: E[]) => void): JSX.Element {
+    asEditElement(value: E[], onChange: (new_value: E[]) => void, onValidChange: (newError: string | null) => void): JSX.Element {
+        let props: SequenceEditProps = {
+            initialValue: value,
+            elementType: this.elementType,
+            onChange: onChange,
+            onValidityChange: onValidChange,
+        }
         if (this.elementType.editElementShort()) {
-            return <ShortSequenceEdit initalValue={value} elementType={this.elementType} onChange={onChange}/>
+            return <ShortSequenceEdit {...props}/>
         } else {
-            return <LongSequenceEdit initalValue={value} elementType={this.elementType} onChange={onChange}/>
+            return <LongSequenceEdit {...props}/>
         }
     }
 
@@ -635,10 +537,87 @@ function MappingView(props: MappingViewProps) {
                 </ListItem>
             })}
         </List>
-        <ValueDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
-                     title={`key "${dialogTarget?.key}"`}>
+        <ValueViewDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
+                         title={`key "${dialogTarget?.key}"`}>
             {dialogTarget?.element}
-        </ValueDialog>
+        </ValueViewDialog>
+    </>
+}
+
+type BaseMappingEditProps = {
+    valueEditFactory: (v: any, k: string, cb: (v: any) => void, vcb: (v: string | null) => void) => JSX.Element
+    initialValue: Record<string, any>
+    valueType: SettingType<any>
+    onChange: (v: Record<string, any>) => void
+}
+
+function BaseMappingEdit(props: BaseMappingEditProps) {
+    // each entry value is a 2-tuple of a value, and a const key
+    const [entries, setEntries] = useState<[string, [any, string]][]>(() => {
+        let ret = Object.entries(props.initialValue).map(([k, v]) => [k, [v, uuid()]]) as [string, [any, string]][];
+        ret.sort();
+        return ret
+    })
+
+    useEffect(() => {
+        props.onChange(Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, v[0]])))
+    }, [entries])
+
+    const handleEditKey = (idx: number) => (newKey: string) => {
+        let newEntryItems = entries.slice();
+        newEntryItems[idx][0] = newKey
+        newEntryItems.sort((a, b) => a[0].localeCompare(b[0]))
+        setEntries(newEntryItems);
+    }
+
+    const handleEditValue = (idx: number) => (v: any) => {
+        let newEntryItems = entries.slice();
+        newEntryItems[idx][1][0] = v;
+        setEntries(newEntryItems);
+    }
+
+    const handleAdd = () => () => {
+        let newEntryItems = entries.slice();
+        newEntryItems.push(["", [props.valueType.defaultValue(), uuid()]]);
+        newEntryItems.sort((a, b) => a[0].localeCompare(b[0]))
+        setEntries(newEntryItems);
+    }
+
+    const handleRemove = (idx: number) => () => {
+        let newEntryItems = entries.slice();
+        newEntryItems.splice(idx, 1);
+        setEntries(newEntryItems);
+    }
+    return <>
+        <List>
+            <TransitionGroup>
+                {entries.map(([key, entry], idx) => {
+                    return <Collapse key={entry[1].toString()}>
+                        <ListItem>
+                            <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                                <ControlledTextField textFieldProps={{multiline: true}} initialValue={key}
+                                                     onChange={handleEditKey(idx)}/>
+                                <ListItemText primary={" : "}/>
+                                <div style={{'flexGrow': '1'}}>
+                                    {
+                                        props.valueEditFactory(entry[0], key, handleEditValue(idx), () => {
+                                        }) // todo!
+                                    }
+                                </div>
+                                <IconButton size="small" onClick={handleRemove(idx)} sx={{my: "-15px"}}>
+                                    <RemoveIcon/>
+                                </IconButton>
+                            </div>
+                        </ListItem>
+                    </Collapse>
+                })}
+            </TransitionGroup>
+            <Divider textAlign="right">
+                <IconButton size="small" onClick={handleAdd()}>
+                    <AddIcon/>
+                </IconButton>
+            </Divider>
+        </List>
     </>
 }
 
@@ -648,35 +627,29 @@ type MappingEditProps = {
     onChange: (v: Record<string, any>) => void
 }
 
-function MappingEdit(props: MappingEditProps) {
-    const [value, setValue] = useState(props.initialValue)
+function LongMappingEdit(props: MappingEditProps) {
     const [dialogTarget, setDialogTarget] = useState<{ key: string, element: JSX.Element } | null>(null);
-
-    const handleEdit = (key: string) => (v: any) => {
-        let newValue = Object.assign({}, value);
-        newValue[key] = v;
-        setValue(newValue);
-        props.onChange(newValue);
-    }
-
     return <>
-        <List>
-            {Object.entries(value).map(([k, v], i) => {
-                return <ListItem key={i.toString()}>
-                    <ListItemText primary={k + ": "}/>
-                    <ListItemButton onClick={() => setDialogTarget(
-                        {element: props.valueType.asEditElement(v, handleEdit(k)), key: k})}
-                    >
-                        <ListItemText primary={props.valueType.Format(v)}/>
-                    </ListItemButton>
-                </ListItem>
-            })}
-        </List>
-        <ValueDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
-                     title={`key "${dialogTarget?.key}"`}>
+        <BaseMappingEdit valueEditFactory={(v, k, cb, vcb) =>
+            <ListItemButton onClick={() => setDialogTarget(
+                {
+                    element: props.valueType.asEditElement(v, cb, vcb), key: k
+                })
+            }
+            >
+                <ListItemText primary={props.valueType.Format(v)}/>
+            </ListItemButton>
+        } {...props}/>
+        <ValueViewDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
+                         title={`key: ${dialogTarget?.key}`}>
             {dialogTarget?.element}
-        </ValueDialog>
+        </ValueViewDialog>
     </>
+}
+
+function ShortMappingEdit(props: MappingEditProps) {
+    return <BaseMappingEdit valueEditFactory={
+        (v, k, cb, vcb) => props.valueType.asEditElement(v, cb, vcb)} {...props}/>
 }
 
 class MapSettingType<V> implements SettingType<Record<string, V>> {
@@ -705,7 +678,11 @@ class MapSettingType<V> implements SettingType<Record<string, V>> {
     }
 
     asEditElement(value: Record<string, V>, onChange: (new_value: Record<string, V>) => void): JSX.Element {
-        return <MappingEdit initialValue={value} valueType={this.valueType} onChange={onChange}/>
+        if (this.valueType.editElementShort()) {
+            return <ShortMappingEdit initialValue={value} valueType={this.valueType} onChange={onChange}/>
+        } else {
+            return <LongMappingEdit initialValue={value} valueType={this.valueType} onChange={onChange}/>
+        }
     }
 
     editElementShort(): boolean {
