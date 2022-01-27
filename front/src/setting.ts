@@ -4,8 +4,8 @@ import {ModelGetSetting} from "./index";
 
 export class Setting {
     name: string
-    type: SettingType
-    default_value: string
+    type: SettingType<any>
+    default_value: any
     configurableFeatures: string[]
     metadata: Map<string, any>
 

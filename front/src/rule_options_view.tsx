@@ -7,7 +7,7 @@ import {SettingType} from "./setting_type";
 
 type RuleOptionsViewProps = {
     options: PotentialRule[];
-    type: SettingType;
+    type: SettingType<any>;
 };
 
 export function RuleOptionsView(props: RuleOptionsViewProps) {

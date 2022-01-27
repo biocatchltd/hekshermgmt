@@ -1,11 +1,12 @@
 import {Setting} from "./setting";
 import {getPotentialRules, getRules, PotentialRule, RuleBranch} from "./potential_rules";
 import * as React from "react";
-import {Card, Stack, Typography, Collapse, Link} from "@mui/material";
+import {Card, Stack, Typography, Collapse, Link, Fab} from "@mui/material";
 import {TruncChip} from "./trunc_string";
 import {ContextSelect} from "./context_select";
 import {TransitionGroup} from "react-transition-group";
 import {ValueDialog} from "./value_dialog";
+import AddIcon from '@mui/icons-material/Add';
 
 type RuleCardProps = {
     setting: Setting,
@@ -98,6 +99,19 @@ export function RulesView(props: RulesViewProps) {
             <ValueDialog open={valueProps !== null} onClose={() => setValueProps(null)} title={valueProps?.title ?? ""}>
                 {valueProps !== null ? valueProps?.element : null}
             </ValueDialog>
+            <Fab onClick={() => setValueProps({
+                                title: "Add Value",
+                                element: props.setting.type.asEditElement(props.setting.default_value, (a: any) => {})
+                            })}
+                 style={{
+                         position: "absolute",
+                         top: 30,
+                         right: 30,
+                         zIndex: 1400, // default z index is 1300 for drawers and I neither know nor care why
+                     }}
+            >
+                <AddIcon/>
+            </Fab>
         </>
     )
 
