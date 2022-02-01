@@ -8,8 +8,8 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RemoveIcon from '@mui/icons-material/Remove';
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {ValueViewDialog} from "./value_dialog";
+import {ReactNode, useEffect, useState} from "react";
+import {ValueEditDialog, ValueViewDialog} from "./value_dialog";
 import {ControlledRadioGroup, ControlledSwitch, ControlledTextField, ControlledTransferList} from "./controlled_input";
 import AddIcon from '@mui/icons-material/Add';
 import {TransitionGroup} from "react-transition-group";
@@ -337,9 +337,10 @@ function BaseSequenceEdit(props: BaseSequenceEditProps) {
     useEffect(() => {
         props.onChange(items.map((v) => v[0]))
         let error = "";
-        for (let item of items){
-            if (item[2]){
-                error = "index 2#: " + item[2]
+        for (let idx in items) {
+            let item = items[idx];
+            if (item[2]) {
+                error = `index #${idx}: ` + item[2]
                 break
             }
         }
@@ -439,19 +440,43 @@ type SequenceEditProps = {
 }
 
 function LongSequenceEdit(props: SequenceEditProps) {
-    const [dialogTarget, setDialogTarget] = useState<{ index: number, element: JSX.Element } | null>(null);
+    const [dialogProps, setDialogProps] = useState<{
+        index: number,
+        value: any,
+        v_cb: (v: any) => void,
+        err_cb: (e: string) => void,
+        children_factory: (value: any, on_change_value: (new_value: any) => void, on_change_validity: (err: string) => void) => ReactNode;
+    } | null>(null);
     return <>
         <BaseSequenceEdit elementFactory={(v, i, cb, vcb) =>
-            <ListItemButton onClick={() => setDialogTarget(
-                {element: props.elementType.asEditElement(v, cb, vcb), index: i})}
+            <ListItemButton onClick={() => setDialogProps(
+                {
+                    index: i, value: v,
+                    v_cb: cb,
+                    err_cb: vcb,
+                    children_factory: (v, v_cb, err_cb) => {
+                        return props.elementType.asEditElement(v, v_cb, err_cb)
+                    }
+                })
+            }
             >
                 <ListItemText primary={props.elementType.Format(v)}/>
             </ListItemButton>
         } {...props}/>
-        <ValueViewDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
-                         title={`index # ${dialogTarget?.index}`}>
-            {dialogTarget?.element}
-        </ValueViewDialog>
+        {dialogProps !== null && <ValueEditDialog open={true}
+                                                  onClose={(
+                                                      ok) => {
+                                                      if (!ok) {
+                                                          dialogProps!.v_cb(dialogProps!.value);
+                                                      }
+                                                      setDialogProps(null);
+                                                  }}
+                                                  initial_value={dialogProps?.value}
+                                                  title={`index #${dialogProps?.index}`}
+                                                  on_value_changed={dialogProps!.v_cb}
+                                                  on_validity_changed={dialogProps!.err_cb}
+                                                  children_factory={dialogProps!.children_factory}
+        />}
     </>
 }
 
@@ -549,18 +574,36 @@ type BaseMappingEditProps = {
     initialValue: Record<string, any>
     valueType: SettingType<any>
     onChange: (v: Record<string, any>) => void
+    onValidityChange: (err: string) => void
 }
 
 function BaseMappingEdit(props: BaseMappingEditProps) {
-    // each entry value is a 2-tuple of a value, and a const key
-    const [entries, setEntries] = useState<[string, [any, string]][]>(() => {
-        let ret = Object.entries(props.initialValue).map(([k, v]) => [k, [v, uuid()]]) as [string, [any, string]][];
+    // each entry value is a 3-tuple of a value a const key, and the error
+    const [entries, setEntries] = useState<[string, [any, string, string]][]>(() => {
+        let ret = Object.entries(props.initialValue).map(([k, v]) => [k, [v, uuid(), ""]]) as [string, [any, string, string]][];
         ret.sort();
         return ret
     })
 
     useEffect(() => {
-        props.onChange(Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, v[0]])))
+        props.onChange(Object.fromEntries(entries.map(([k, v]) => [k, v[0]])))
+        // we can assume that that keys are sorted
+        let previous_key: (string | null) = null;
+        let err: string = "";
+        for (let entry of entries) {
+            let key = entry[0];
+            if (key === previous_key) {
+                err = `repeated key: ${key}`;
+                break
+            }
+            let entry_error = entry[1][2];
+            if (entry_error) {
+                err = `in key: ${key}: ${entry_error}`;
+                break
+            }
+            previous_key = key;
+        }
+        props.onValidityChange(err);
     }, [entries])
 
     const handleEditKey = (idx: number) => (newKey: string) => {
@@ -578,7 +621,7 @@ function BaseMappingEdit(props: BaseMappingEditProps) {
 
     const handleAdd = () => () => {
         let newEntryItems = entries.slice();
-        newEntryItems.push(["", [props.valueType.defaultValue(), uuid()]]);
+        newEntryItems.push(["", [props.valueType.defaultValue(), uuid(), ""]]);
         newEntryItems.sort((a, b) => a[0].localeCompare(b[0]))
         setEntries(newEntryItems);
     }
@@ -588,6 +631,13 @@ function BaseMappingEdit(props: BaseMappingEditProps) {
         newEntryItems.splice(idx, 1);
         setEntries(newEntryItems);
     }
+
+    const handleErrorChange = (idx: number) => (e: string) => {
+        let newEntryItems = entries.slice();
+        newEntryItems[idx][1][2] = e;
+        setEntries(newEntryItems);
+    }
+
     return <>
         <List>
             <TransitionGroup>
@@ -600,8 +650,8 @@ function BaseMappingEdit(props: BaseMappingEditProps) {
                                 <ListItemText primary={" : "}/>
                                 <div style={{'flexGrow': '1'}}>
                                     {
-                                        props.valueEditFactory(entry[0], key, handleEditValue(idx), () => {
-                                        }) // todo!
+                                        props.valueEditFactory(entry[0], key, handleEditValue(idx),
+                                            handleErrorChange(idx))
                                     }
                                 </div>
                                 <IconButton size="small" onClick={handleRemove(idx)} sx={{my: "-15px"}}>
@@ -625,25 +675,46 @@ type MappingEditProps = {
     initialValue: Record<string, any>
     valueType: SettingType<any>
     onChange: (v: Record<string, any>) => void
+    onValidityChange: (err: string) => void
 }
 
 function LongMappingEdit(props: MappingEditProps) {
-    const [dialogTarget, setDialogTarget] = useState<{ key: string, element: JSX.Element } | null>(null);
+    const [dialogProps, setDialogProps] = useState<{
+        key: string,
+        value: any,
+        v_cb: (v: any) => void,
+        err_cb: (e: string) => void,
+        children_factory: (value: any, on_change_value: (new_value: any) => void, on_change_validity: (err: string) => void) => ReactNode;
+    } | null>(null);
     return <>
-        <BaseMappingEdit valueEditFactory={(v, k, cb, vcb) =>
-            <ListItemButton onClick={() => setDialogTarget(
+        <BaseMappingEdit valueEditFactory={(v, k, cb, valid_cb) =>
+            <ListItemButton onClick={() => setDialogProps(
                 {
-                    element: props.valueType.asEditElement(v, cb, vcb), key: k
+                    key: k, value: v,
+                    v_cb: cb,
+                    err_cb: valid_cb,
+                    children_factory: (v, v_cb, err_cb) => {
+                        return props.valueType.asEditElement(v, v_cb, err_cb)
+                    }
                 })
             }
             >
                 <ListItemText primary={props.valueType.Format(v)}/>
             </ListItemButton>
         } {...props}/>
-        <ValueViewDialog open={dialogTarget !== null} onClose={() => setDialogTarget(null)}
-                         title={`key: ${dialogTarget?.key}`}>
-            {dialogTarget?.element}
-        </ValueViewDialog>
+        {dialogProps !== null && <ValueEditDialog open={true}
+                                                  onClose={(ok) => {
+                                                      if (!ok) {
+                                                          dialogProps!.v_cb(dialogProps!.value);
+                                                      }
+                                                      setDialogProps(null);
+                                                  }}
+                                                  initial_value={dialogProps?.value}
+                                                  title={`key: ${dialogProps?.key}`}
+                                                  on_value_changed={dialogProps!.v_cb}
+                                                  on_validity_changed={dialogProps!.err_cb}
+                                                  children_factory={dialogProps!.children_factory}
+        />}
     </>
 }
 
@@ -677,11 +748,18 @@ class MapSettingType<V> implements SettingType<Record<string, V>> {
         return <MappingView entries={entries} valueType={this.valueType}/>
     }
 
-    asEditElement(value: Record<string, V>, onChange: (new_value: Record<string, V>) => void): JSX.Element {
+    asEditElement(value: Record<string, V>, onChange: (new_value: Record<string, V>) => void,
+                  onValidChange: (newError: string | null) => void): JSX.Element {
+        let props: MappingEditProps = {
+            initialValue: value,
+            valueType: this.valueType,
+            onChange: onChange,
+            onValidityChange: onValidChange,
+        }
         if (this.valueType.editElementShort()) {
-            return <ShortMappingEdit initialValue={value} valueType={this.valueType} onChange={onChange}/>
+            return <ShortMappingEdit {...props}/>
         } else {
-            return <LongMappingEdit initialValue={value} valueType={this.valueType} onChange={onChange}/>
+            return <LongMappingEdit {...props}/>
         }
     }
 

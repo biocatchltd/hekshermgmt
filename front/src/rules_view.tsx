@@ -5,7 +5,7 @@ import {Card, Stack, Typography, Collapse, Link, Fab} from "@mui/material";
 import {TruncChip} from "./trunc_string";
 import {ContextSelect} from "./context_select";
 import {TransitionGroup} from "react-transition-group";
-import {ValueViewDialog} from "./value_dialog";
+import {ValueEditDialog, ValueViewDialog} from "./value_dialog";
 import AddIcon from '@mui/icons-material/Add';
 
 type RuleCardProps = {
@@ -36,7 +36,8 @@ function RuleCard(props: RuleCardProps) {
 type RulesViewProps = {
     setting: Setting;
     rules: RuleBranch;
-    initialContextFilter?: Map<string, string>;
+    initialContextFilter: Map<string, string> | undefined;
+    parentContextOptions: Map<string, Set<string>>
 };
 
 
@@ -47,6 +48,7 @@ export function RulesView(props: RulesViewProps) {
         title: string
         element: JSX.Element,
     } | null>(null);
+    const [valueEditDialogProps, setValueEditDialogProps] = React.useState<{} | null>(null);
 
     const rules = getRules(props.rules);
 
@@ -88,27 +90,46 @@ export function RulesView(props: RulesViewProps) {
                 <TransitionGroup>
                     {applicableRules.map(rule =>
                         <Collapse key={rule.rule.rule_id} style={{padding: 3}}>
-                            <RuleCard potentialRule={rule} setting={props.setting} onValueClick={() => setValueViewDialogProps({
-                                title: rule.rule.rule_id === -1 ? "Default Value" : `Rule #${rule.rule.rule_id}`,
-                                element: props.setting.type.asViewElement(rule.rule.value)
-                            })}/>
+                            <RuleCard potentialRule={rule} setting={props.setting}
+                                      onValueClick={() => setValueViewDialogProps({
+                                          title: rule.rule.rule_id === -1 ? "Default Value" : `Rule #${rule.rule.rule_id}`,
+                                          element: props.setting.type.asViewElement(rule.rule.value)
+                                      })}/>
                         </Collapse>
                     )}
                 </TransitionGroup>
             </Stack>
-            <ValueViewDialog open={valueViewDialogProps !== null} onClose={() => setValueViewDialogProps(null)} title={valueViewDialogProps?.title ?? ""}>
+            <ValueViewDialog open={valueViewDialogProps !== null} onClose={() => setValueViewDialogProps(null)}
+                             title={valueViewDialogProps?.title ?? ""}>
                 {valueViewDialogProps !== null ? valueViewDialogProps?.element : null}
             </ValueViewDialog>
-            <Fab onClick={() => setValueViewDialogProps({
-                                title: "Add Value",
-                                element: props.setting.type.asEditElement(props.setting.default_value, (a: any) => {}, (a: any) => {})
-                            })}
+            {valueEditDialogProps !== null && <ValueEditDialog
+                open={true}
+                onClose={() => setValueEditDialogProps(null)}
+                children_factory={
+                    (val, val_cb, err_cb) => props.setting.type.asEditElement(val, val_cb, err_cb)
+                }
+                title={"Add Rule"}
+                initial_value={props.setting.default_value}
+                on_value_changed={() => {
+                }}
+                on_validity_changed={() => {
+                }}
+                initialContext={partialContext}
+                onContextChanged={() => {
+                }}
+                contextOptions={new Map(Array.from(props.parentContextOptions.entries()).filter(
+                    ([k, v]) => props.setting.configurableFeatures.indexOf(k) !== -1)
+                )}
+                existingRuleBranch={props.rules}
+                contextFeatures={props.setting.configurableFeatures}
+            />}
+            <Fab onClick={() => setValueEditDialogProps({})}
                  style={{
-                         position: "absolute",
-                         top: 30,
-                         right: 30,
-                         zIndex: 1400, // default z index is 1300 for drawers and I neither know nor care why
-                     }}
+                     position: "absolute",
+                     top: 30,
+                     right: 30,
+                 }}
             >
                 <AddIcon/>
             </Fab>

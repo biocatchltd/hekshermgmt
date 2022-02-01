@@ -258,7 +258,8 @@ export function SettingsView() {
             <ThemeProvider theme={createTheme()}>
                 <ContextSelect context_options={ruleSet.context_options}
                                filterChangeCallback={updateContextFilter}
-                               stackProps={{direction: "row", justifyContent: "flex-start", spacing: 2}}/>
+                               stackProps={{direction: "row", justifyContent: "flex-start", spacing: 2}}
+                />
                 <MUIDataTable
                     title="Settings"
                     data={data}
@@ -285,7 +286,7 @@ export function SettingsView() {
                          position: "absolute",
                          top: 30,
                          right: rulesPanelOpen ? rulesPanelButtonRight : 0,
-                         zIndex: 1400, // default z index is 1300 for drawers and I neither know nor care why
+                         zIndex: 1250, // default z index is 1200 for drawers and I neither know nor care why
                      }}
                      variant={(rulesPanelSetting === null) ? "circular" : "extended"}
                      disabled={rulesPanelSetting === null}>
@@ -313,6 +314,7 @@ export function SettingsView() {
                         <RulesView setting={rulesPanelSetting}
                                    rules={ruleSet.rules_per_setting.get(rulesPanelSetting.name)!}
                                    initialContextFilter={rulesPanelContextFilter ?? undefined}
+                                   parentContextOptions={ruleSet.context_options}
                         />
                     }
                 </ResizableDrawer>

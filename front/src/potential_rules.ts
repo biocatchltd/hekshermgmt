@@ -173,6 +173,18 @@ export function getRules(rules: RuleBranch): RuleLeaf[] {
     return ret
 }
 
+export function getRule(rules: RuleBranch, context: Map<string, string>, features: string[]): RuleLeaf | null{
+    let current: any = rules;
+    for (let feature of features){
+        let child = current.get(context.get(feature) ?? "*")
+        if (child === undefined){
+            return null;
+        }
+        current = child;
+    }
+    return current
+}
+
 function _potential_rules(branch: RuleBranch, context_features: string[], context_filters: Map<string, string>, context_matches: ContextMatch[]): RuleMatch[] {
     let cf = context_features[context_matches.length];
     let filter: string | null = context_filters.get(cf) ?? null;
