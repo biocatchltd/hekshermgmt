@@ -9,7 +9,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RemoveIcon from '@mui/icons-material/Remove';
 import * as React from "react";
 import {ReactNode, useEffect, useState} from "react";
-import {ValueEditDialog, ValueViewDialog} from "./value_dialog";
+import {ValueEditDialogNoContext, ValueViewDialog} from "./value_dialog";
 import {ControlledRadioGroup, ControlledSwitch, ControlledTextField, ControlledTransferList} from "./controlled_input";
 import AddIcon from '@mui/icons-material/Add';
 import {TransitionGroup} from "react-transition-group";
@@ -463,19 +463,20 @@ function LongSequenceEdit(props: SequenceEditProps) {
                 <ListItemText primary={props.elementType.Format(v)}/>
             </ListItemButton>
         } {...props}/>
-        {dialogProps !== null && <ValueEditDialog open={true}
-                                                  onClose={(
-                                                      ok) => {
-                                                      if (!ok) {
-                                                          dialogProps!.v_cb(dialogProps!.value);
-                                                      }
-                                                      setDialogProps(null);
-                                                  }}
-                                                  initial_value={dialogProps?.value}
-                                                  title={`index #${dialogProps?.index}`}
-                                                  on_value_changed={dialogProps!.v_cb}
-                                                  on_validity_changed={dialogProps!.err_cb}
-                                                  children_factory={dialogProps!.children_factory}
+        {dialogProps !== null && <ValueEditDialogNoContext
+            open={true}
+            onClose={
+                (ok) => {
+                    if (!ok) {
+                        dialogProps!.v_cb(dialogProps!.value);
+                    }
+                    setDialogProps(null);
+                }}
+            initial_value={dialogProps?.value}
+            title={`index #${dialogProps?.index}`}
+            on_value_changed={dialogProps!.v_cb}
+            on_validity_changed={dialogProps!.err_cb}
+            children_factory={dialogProps!.children_factory}
         />}
     </>
 }
@@ -702,18 +703,19 @@ function LongMappingEdit(props: MappingEditProps) {
                 <ListItemText primary={props.valueType.Format(v)}/>
             </ListItemButton>
         } {...props}/>
-        {dialogProps !== null && <ValueEditDialog open={true}
-                                                  onClose={(ok) => {
-                                                      if (!ok) {
-                                                          dialogProps!.v_cb(dialogProps!.value);
-                                                      }
-                                                      setDialogProps(null);
-                                                  }}
-                                                  initial_value={dialogProps?.value}
-                                                  title={`key: ${dialogProps?.key}`}
-                                                  on_value_changed={dialogProps!.v_cb}
-                                                  on_validity_changed={dialogProps!.err_cb}
-                                                  children_factory={dialogProps!.children_factory}
+        {dialogProps !== null && <ValueEditDialogNoContext
+            open={true}
+            onClose={(ok) => {
+                if (!ok) {
+                    dialogProps!.v_cb(dialogProps!.value);
+                }
+                setDialogProps(null);
+            }}
+            initial_value={dialogProps?.value}
+            title={`key: ${dialogProps?.key}`}
+            on_value_changed={dialogProps!.v_cb}
+            on_validity_changed={dialogProps!.err_cb}
+            children_factory={dialogProps!.children_factory}
         />}
     </>
 }

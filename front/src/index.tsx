@@ -28,6 +28,13 @@ export interface ModelRule {
     metadata: Record<string, any>
 }
 
+export interface ModelGetRule {
+    setting: string
+    value: any
+    feature_values: [string, string][]
+    metadata: Record<string, any>
+}
+
 export class RuleSet {
     rules_per_setting: Map<string, RuleBranch>
     context_options: Map<string, Set<string>>

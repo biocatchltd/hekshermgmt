@@ -3,19 +3,15 @@ import {Setting} from "./setting";
 import axios from 'axios';
 import {ModelGetSettings, ModelQuery, RuleSet} from "./index";
 import {
-    Box,
-    Card,
+    Backdrop,
     Chip,
     ChipProps,
     CircularProgress,
     Fab,
     Grid,
     IconButton,
-    List,
-    ListItem, ListItemButton, ListItemText,
-    Modal, Stack
 } from "@mui/material";
-import {getPotentialRules} from "./potential_rules";
+import {getPotentialRules, RuleBranch} from "./potential_rules";
 import MUIDataTable, {MUIDataTableColumn} from "mui-datatables";
 import BallotIcon from "@mui/icons-material/Ballot";
 import {TruncChip} from "./trunc_string";
@@ -50,6 +46,8 @@ export function SettingsView() {
 
     const [valueViewProps, setValueViewProps] = useState<{ title: string; element: JSX.Element; } | null>(null);
 
+    const [processing, setProcessing] = useState<Promise<any> | null>(null)
+
     let base_url;
     let base_headers = {};
     if (process.env.REACT_APP_HEKSHER_URL) {
@@ -70,6 +68,12 @@ export function SettingsView() {
     const abortController = new AbortController();
     const viewColumnPreference = useRef(new Map<string, boolean>())
     const lastSetRulesPanelButtonRightTime = useRef(0);
+
+    const handleBranchChange = (b: RuleBranch) => {
+        let newRuleSet = ruleSet!;
+        newRuleSet.rules_per_setting.set(rulesPanelSetting!.name, b);
+        setRuleSet(newRuleSet)
+    }
 
     useEffect(() => {
         let cf_promise = heksherClient.get('/api/v1/context_features',
@@ -315,9 +319,16 @@ export function SettingsView() {
                                    rules={ruleSet.rules_per_setting.get(rulesPanelSetting.name)!}
                                    initialContextFilter={rulesPanelContextFilter ?? undefined}
                                    parentContextOptions={ruleSet.context_options}
+
+                                   processingCallback={(p) => setProcessing(p)}
+                                   onRuleChange={(b: RuleBranch) => handleBranchChange(b)}
+                                   heksherClient={heksherClient}
                         />
                     }
                 </ResizableDrawer>
+                <Backdrop open={processing !== null} sx={{ zIndex: 1300 }}>
+                    <CircularProgress/>
+                </Backdrop>
                 <ValueViewDialog open={valueViewProps !== null} onClose={() => setValueViewProps(null)}
                                  title={valueViewProps !== null ? valueViewProps.title : ""}>
                     {valueViewProps !== null && valueViewProps.element}

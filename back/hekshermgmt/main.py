@@ -12,6 +12,7 @@ if __debug__:
             allow_origins=["*"],
             allow_methods=["*"],
             allow_headers=["*"],
+            expose_headers=['location'],
         )
     )
 

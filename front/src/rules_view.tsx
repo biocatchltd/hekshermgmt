@@ -1,12 +1,19 @@
 import {Setting} from "./setting";
-import {getPotentialRules, getRules, PotentialRule, RuleBranch} from "./potential_rules";
+import {AddRule, getPotentialRules, getRules, PotentialRule, RuleBranch, RuleLeaf} from "./potential_rules";
 import * as React from "react";
 import {Card, Stack, Typography, Collapse, Link, Fab} from "@mui/material";
 import {TruncChip} from "./trunc_string";
 import {ContextSelect} from "./context_select";
 import {TransitionGroup} from "react-transition-group";
-import {ValueEditDialog, ValueViewDialog} from "./value_dialog";
+import {ValueEditDialogNewContext, ValueViewDialog} from "./value_dialog";
 import AddIcon from '@mui/icons-material/Add';
+import {useEffect, useState} from "react";
+import {AxiosInstance} from "axios";
+import {ModelGetRule} from "./index";
+
+interface ModelAddRuleResponse {
+    rule_id: number
+}
 
 type RuleCardProps = {
     setting: Setting,
@@ -38,17 +45,31 @@ type RulesViewProps = {
     rules: RuleBranch;
     initialContextFilter: Map<string, string> | undefined;
     parentContextOptions: Map<string, Set<string>>
+
+    heksherClient: AxiosInstance
+    processingCallback: (p: Promise<any> | null) => void;
+    onRuleChange: (r: RuleBranch) => void;
 };
 
 
 export function RulesView(props: RulesViewProps) {
-    const [partialContext, setPartialContext] = React.useState(props.initialContextFilter
+    const [partialContext, setPartialContext] = useState(props.initialContextFilter
         ?? new Map<string, string>());
-    const [valueViewDialogProps, setValueViewDialogProps] = React.useState<{
+    const [valueViewDialogProps, setValueViewDialogProps] = useState<{
         title: string
         element: JSX.Element,
     } | null>(null);
-    const [valueEditDialogProps, setValueEditDialogProps] = React.useState<{} | null>(null);
+    const [valueEditDialogProps, setValueEditDialogProps] = useState<{} | null>(null);
+
+    const [valueEditDialogValue, setValueEditDialogValue] = useState<any>(null);
+    const [valueEditDialogContext, setValueEditDialogContext] = useState<Map<string, string>>(new Map())
+    const [valueEditDialogInfo, setValueEditDialogInfo] = useState<string>("");
+
+    const [applicableRules, setApplicableRules] = useState<PotentialRule[]>([]);
+
+    useEffect(()=>{
+        setApplicableRules(getPotentialRules(props.rules, props.setting.configurableFeatures, partialContext));
+    }, [partialContext])
 
     const rules = getRules(props.rules);
 
@@ -58,8 +79,6 @@ export function RulesView(props: RulesViewProps) {
             context_options.get(feature)!.add(value);
         }
     }
-
-    const applicableRules = getPotentialRules(props.rules, props.setting.configurableFeatures, partialContext);
 
     return (
         <>
@@ -103,26 +122,59 @@ export function RulesView(props: RulesViewProps) {
                              title={valueViewDialogProps?.title ?? ""}>
                 {valueViewDialogProps !== null ? valueViewDialogProps?.element : null}
             </ValueViewDialog>
-            {valueEditDialogProps !== null && <ValueEditDialog
+            {valueEditDialogProps !== null && <ValueEditDialogNewContext
                 open={true}
-                onClose={() => setValueEditDialogProps(null)}
+                onClose={(ok) => {
+                    setValueEditDialogProps(null)
+                    if (ok) {
+                        let promise = props.heksherClient.post<ModelAddRuleResponse>('/api/v1/rules', {
+                            setting: props.setting.name,
+                            feature_values: Object.fromEntries(valueEditDialogContext.entries()),
+                            value: valueEditDialogValue,
+                            metadata: {
+                                information: valueEditDialogInfo,
+                            },
+                        }).then((response) => {
+                            let rule_id = response.data.rule_id;
+                            let getPromise = props.heksherClient.get<ModelGetRule>(
+                                '/api/v1/rules'+response.headers['location']).then(
+                                (response) => {
+                                    let newRule = new RuleLeaf(response.data, rule_id);
+                                    let newBranch = props.rules;
+                                    AddRule(newBranch, newRule, props.setting.configurableFeatures);
+                                    props.onRuleChange(newBranch)
+                                    props.processingCallback(null)
+                                }
+                            )
+                            props.processingCallback(getPromise);
+                        }).catch((err)=>{
+                            if (err.response){
+                                console.log('Error creating rule:', err.response, err.response.data)
+                            }
+                            else{
+                                console.log('Error creating rule:', err, err.message)
+                            }
+                        })
+
+                        props.processingCallback(promise);
+                    }
+                }}
                 children_factory={
                     (val, val_cb, err_cb) => props.setting.type.asEditElement(val, val_cb, err_cb)
                 }
                 title={"Add Rule"}
                 initial_value={props.setting.default_value}
-                on_value_changed={() => {
-                }}
+                on_value_changed={(v) => setValueEditDialogValue(v)}
+                onContextChanged={(c) => setValueEditDialogContext(c)}
                 on_validity_changed={() => {
                 }}
                 initialContext={partialContext}
-                onContextChanged={() => {
-                }}
                 contextOptions={new Map(Array.from(props.parentContextOptions.entries()).filter(
                     ([k, v]) => props.setting.configurableFeatures.indexOf(k) !== -1)
                 )}
                 existingRuleBranch={props.rules}
                 contextFeatures={props.setting.configurableFeatures}
+                onInfoChange={(s) => setValueEditDialogInfo(s)}
             />}
             <Fab onClick={() => setValueEditDialogProps({})}
                  style={{

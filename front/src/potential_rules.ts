@@ -1,4 +1,4 @@
-import {ModelRule} from "./index";
+import {ModelGetRule, ModelRule} from "./index";
 
 const exact_match = Symbol("e");
 const wildcard = Symbol("w");
@@ -101,11 +101,19 @@ export class RuleLeaf {
     rule_id: number
     metadata: Map<string, any>
 
-    constructor(model: ModelRule) {
+    constructor(model: ModelRule);
+    constructor(model: ModelGetRule, id: number);
+    constructor(model: any, id?: number) {
         this.value = model.value;
-        this.rule_id = model.rule_id;
         this.metadata = new Map(Object.entries(model.metadata));
-        this.context_features = new Map(model.context_features);
+
+        if (id === undefined) {
+            this.rule_id = model.rule_id;
+            this.context_features = new Map(model.context_features);
+        } else {
+            this.rule_id = id;
+            this.context_features = new Map(model.feature_values);
+        }
     }
 }
 
@@ -161,6 +169,7 @@ export function ruleBranchFromRules(rules: RuleLeaf[], configurable_features: st
         return ret;
     }
 }
+
 export function getRules(rules: RuleBranch): RuleLeaf[] {
     let ret: RuleLeaf[] = []
     for (let value of rules.values()) {
@@ -173,11 +182,11 @@ export function getRules(rules: RuleBranch): RuleLeaf[] {
     return ret
 }
 
-export function getRule(rules: RuleBranch, context: Map<string, string>, features: string[]): RuleLeaf | null{
+export function getRule(rules: RuleBranch, context: Map<string, string>, features: string[]): RuleLeaf | null {
     let current: any = rules;
-    for (let feature of features){
+    for (let feature of features) {
         let child = current.get(context.get(feature) ?? "*")
-        if (child === undefined){
+        if (child === undefined) {
             return null;
         }
         current = child;
@@ -185,9 +194,32 @@ export function getRule(rules: RuleBranch, context: Map<string, string>, feature
     return current
 }
 
+export function AddRule(rules: RuleBranch, newRule: RuleLeaf, features: string[]) {
+    let current: any = rules;
+    for (let feature_idx in features) {
+        let feature = features[feature_idx];
+        let key = newRule.context_features.get(feature) ?? "*";
+        if (parseInt(feature_idx) === features.length - 1){
+            current.set(key, newRule);
+            return
+        } else{
+            let child = current.get(key)
+            if (child === undefined) {
+                child = new Map();
+                current.set(key, child);
+            }
+            current = child;
+        }
+    }
+
+}
+
 function _potential_rules(branch: RuleBranch, context_features: string[], context_filters: Map<string, string>, context_matches: ContextMatch[]): RuleMatch[] {
     let cf = context_features[context_matches.length];
     let filter: string | null = context_filters.get(cf) ?? null;
+    if (filter === ""){
+        filter = null;
+    }
     let ret: RuleMatch[] = [];
     if (context_matches.length == context_features.length - 1) {
         // we are at the bottom of the tree, add direct rules
