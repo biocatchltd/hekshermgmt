@@ -211,7 +211,25 @@ export function AddRule(rules: RuleBranch, newRule: RuleLeaf, features: string[]
             current = child;
         }
     }
+}
 
+export function ReplaceRule(rules: RuleBranch, newRule: RuleLeaf, features: string[]) {
+    let current: any = rules;
+    for (let feature_idx in features) {
+        let feature = features[feature_idx];
+        let key = newRule.context_features.get(feature) ?? "*";
+        if (parseInt(feature_idx) === features.length - 1){
+            current.set(key, newRule);
+            return
+        } else{
+            current = current.get(key)!;
+        }
+    }
+}
+
+export function ruleBranchCopy(rules: RuleBranch): RuleBranch{
+    // @ts-ignore
+    return new Map(rules);
 }
 
 function _potential_rules(branch: RuleBranch, context_features: string[], context_filters: Map<string, string>, context_matches: ContextMatch[]): RuleMatch[] {

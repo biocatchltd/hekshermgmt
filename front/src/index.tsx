@@ -39,10 +39,15 @@ export class RuleSet {
     rules_per_setting: Map<string, RuleBranch>
     context_options: Map<string, Set<string>>
 
-    constructor(model: ModelQuery, context_features: string[], settings: Setting[]) {
+    constructor(rules_per_setting: Map<string, RuleBranch>, context_options: Map<string, Set<string>>) {
+        this.rules_per_setting = rules_per_setting;
+        this.context_options = context_options;
+    }
+
+    static fromQuery(model: ModelQuery, context_features: string[], settings: Setting[]): RuleSet {
         let settings_by_name: Map<string, Setting> = new Map(settings.map(s => [s.name, s]));
-        this.rules_per_setting = new Map<string, RuleBranch>()
-        this.context_options = new Map(context_features.map(cf => [cf, new Set<string>()]))
+        let rules_per_setting = new Map<string, RuleBranch>()
+        let context_options = new Map(context_features.map(cf => [cf, new Set<string>()]))
         for (let setting_name in model.settings) {
             let setting = settings_by_name.get(setting_name)!;
             let setting_data = model.settings[setting_name];
@@ -54,17 +59,23 @@ export class RuleSet {
                 metadata: new Map()
             }))
 
-            this.rules_per_setting.set(setting_name,
+            rules_per_setting.set(setting_name,
                 ruleBranchFromRules(uncollated_rules, setting.configurableFeatures));
             for (let rule of uncollated_rules) {
                 for (let cf of context_features) {
                     let val = rule.context_features.get(cf);
                     if (val !== undefined) {
-                        this.context_options.get(cf)!.add(val)
+                        context_options.get(cf)!.add(val)
                     }
                 }
             }
         }
+        return new RuleSet(rules_per_setting, context_options)
+    }
+
+    copy(): RuleSet{
+        return new RuleSet(new Map(this.rules_per_setting), new Map(this.context_options))
+
     }
 }
 

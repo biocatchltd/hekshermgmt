@@ -1,4 +1,4 @@
-import {Fragment, useEffect, useRef, useState} from "react";
+import {Fragment, useEffect, useMemo, useRef, useState} from "react";
 import {Setting} from "./setting";
 import axios from 'axios';
 import {ModelGetSettings, ModelQuery, RuleSet} from "./index";
@@ -43,6 +43,13 @@ export function SettingsView() {
 
     const [rulesPanelSetting, setRulesPanelSetting] = useState<Setting | null>(null);
     const [rulesPanelContextFilter, setRulesPanelContextFilter] = useState<Map<string, string> | null>(null);
+    const rulesPanelRules = useMemo(() => {
+        let newRulePanelRules = null;
+        if (rulesPanelSetting !== null && ruleSet !== null) {
+            newRulePanelRules = ruleSet?.rules_per_setting.get(rulesPanelSetting?.name) ?? null;
+        }
+        return newRulePanelRules
+    }, [ruleSet, rulesPanelSetting])
 
     const [valueViewProps, setValueViewProps] = useState<{ title: string; element: JSX.Element; } | null>(null);
 
@@ -70,7 +77,7 @@ export function SettingsView() {
     const lastSetRulesPanelButtonRightTime = useRef(0);
 
     const handleBranchChange = (b: RuleBranch) => {
-        let newRuleSet = ruleSet!;
+        let newRuleSet = ruleSet!.copy();
         newRuleSet.rules_per_setting.set(rulesPanelSetting!.name, b);
         setRuleSet(newRuleSet)
     }
@@ -107,7 +114,7 @@ export function SettingsView() {
         if (queryResult === null || settings === null || contextFeatures === null) {
             return;
         }
-        const ruleset = new RuleSet(queryResult!, contextFeatures!, settings!);
+        const ruleset = RuleSet.fromQuery(queryResult!, contextFeatures!, settings!);
         setRuleSet(ruleset);
     }, [queryResult, settings, contextFeatures])
 
@@ -219,7 +226,7 @@ export function SettingsView() {
 
                     return <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                         <div style={{'flexGrow': '1'}}>{chip}</div>
-                        <IconButton onClick={()=>{
+                        <IconButton onClick={() => {
                             setRulesPanelOpen(true);
                             setRulesPanelSetting(setting);
                             setRulesPanelContextFilter(contextFilters)
@@ -314,9 +321,9 @@ export function SettingsView() {
                         }
                     }}
                 >
-                    {rulesPanelSetting !== null &&
+                    {rulesPanelSetting !== null && rulesPanelRules !== null &&
                         <RulesView setting={rulesPanelSetting}
-                                   rules={ruleSet.rules_per_setting.get(rulesPanelSetting.name)!}
+                                   rules={rulesPanelRules}
                                    initialContextFilter={rulesPanelContextFilter ?? undefined}
                                    parentContextOptions={ruleSet.context_options}
 
@@ -326,7 +333,7 @@ export function SettingsView() {
                         />
                     }
                 </ResizableDrawer>
-                <Backdrop open={processing !== null} sx={{ zIndex: 1300 }}>
+                <Backdrop open={processing !== null} sx={{zIndex: 1300}}>
                     <CircularProgress/>
                 </Backdrop>
                 <ValueViewDialog open={valueViewProps !== null} onClose={() => setValueViewProps(null)}

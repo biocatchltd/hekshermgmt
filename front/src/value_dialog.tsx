@@ -13,7 +13,6 @@ import {
 import Draggable from "react-draggable";
 import * as React from "react";
 import {ContextSelect} from "./context_select";
-import {RuleSet} from "./index";
 import {getRule, RuleBranch} from "./potential_rules";
 
 type ValueViewDialogProps = {
@@ -94,6 +93,7 @@ type ValueEditDialogNewContextProps = {
     onInfoChange: (info: string) => void;
 }
 
+// todo common supercomp?
 export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps) {
     const [valueError, setValueError] = useState("");
     const [value, setValue] = useState(props.initial_value);
@@ -207,9 +207,8 @@ export function ValueEditDialogConstContext(props: ValueEditDialogConstContextPr
     >
         <DialogTitle style={{cursor: 'move'}} id="draggable-dialog-title">
             {props.title}
-            <div style={{fontStyle: 'small'}}>{Array.from(props.initialContext!.entries()).map(([key, value]) => {
-                `${key}: ${value}`
-            }).join(", ")}</div>
+            <div style={{fontStyle: 'small'}}>{Array.from(initial_context.entries()).map(([key, value]) =>
+                `${key}: ${value}`).join(", ")}</div>
         </DialogTitle>
         {contextError && <Alert severity="error">{contextError}</Alert>}
         {valueError && <Alert severity="error">{valueError}</Alert>}
