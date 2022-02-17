@@ -227,6 +227,20 @@ export function ReplaceRule(rules: RuleBranch, newRule: RuleLeaf, features: stri
     }
 }
 
+export function removeRule(rules: RuleBranch, rule_to_remove: RuleLeaf, features: string[]) {
+    let current: any = rules;
+    for (let feature_idx in features) {
+        let feature = features[feature_idx];
+        let key = rule_to_remove.context_features.get(feature) ?? "*";
+        if (parseInt(feature_idx) === features.length - 1){
+            current.delete(key);
+            return
+        } else{
+            current = current.get(key)!;
+        }
+    }
+}
+
 export function ruleBranchCopy(rules: RuleBranch): RuleBranch{
     // @ts-ignore
     return new Map(rules);

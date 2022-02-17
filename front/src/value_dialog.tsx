@@ -179,7 +179,6 @@ export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps)
 export function ValueEditDialogConstContext(props: ValueEditDialogConstContextProps) {
     const [valueError, setValueError] = useState("");
     const [value, setValue] = useState(props.initial_value);
-    const [contextError, setContextError] = useState("");
     // all contexts that are "undefined" in the partial context should default to *
     let initial_context = new Map(Array.from(props.contextFeatures).map(
         (k) => {
@@ -197,8 +196,8 @@ export function ValueEditDialogConstContext(props: ValueEditDialogConstContextPr
     }, [value])
 
     useEffect(() => {
-        props.on_validity_changed(valueError || contextError);
-    }, [valueError, contextError])
+        props.on_validity_changed(valueError);
+    }, [valueError])
 
     return <Dialog open={props.open}
                    PaperComponent={PaperComponent}
@@ -210,7 +209,6 @@ export function ValueEditDialogConstContext(props: ValueEditDialogConstContextPr
             <div style={{fontStyle: 'small'}}>{Array.from(initial_context.entries()).map(([key, value]) =>
                 `${key}: ${value}`).join(", ")}</div>
         </DialogTitle>
-        {contextError && <Alert severity="error">{contextError}</Alert>}
         {valueError && <Alert severity="error">{valueError}</Alert>}
         <DialogContent>
             <div>
@@ -218,7 +216,7 @@ export function ValueEditDialogConstContext(props: ValueEditDialogConstContextPr
             </div>
         </DialogContent>
         <DialogActions>
-            <Button onClick={() => props.onClose(true)} disabled={valueError !== "" || contextError !== ""}>
+            <Button onClick={() => props.onClose(true)} disabled={valueError !== ""}>
                 OK
             </Button>
             <Button onClick={() => props.onClose(false)}>

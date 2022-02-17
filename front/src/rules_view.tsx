@@ -3,7 +3,7 @@ import {
     AddRule,
     getPotentialRules,
     getRules,
-    PotentialRule,
+    PotentialRule, removeRule,
     ReplaceRule,
     RuleBranch, ruleBranchCopy,
     RuleLeaf
@@ -18,7 +18,6 @@ import {
     Fab,
     CardActions,
     CardContent,
-    Button,
     IconButton
 } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
@@ -31,6 +30,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {useMemo, useState} from "react";
 import {AxiosInstance} from "axios";
 import {ModelGetRule} from "./index";
+import {ConfirmDialog} from "./confirm_dialog";
 
 interface ModelAddRuleResponse {
     rule_id: number
@@ -68,7 +68,9 @@ function RuleCard(props: RuleCardProps) {
                 <IconButton size="small" onClick={() => props.onEditClick()}>
                     <EditIcon/>
                 </IconButton>
-                <IconButton size="small"><DeleteIcon/></IconButton>
+                <IconButton size="small" onClick={() => props.onDeleteClick()}>
+                    <DeleteIcon/>
+                </IconButton>
             </CardActions>
         }
     </Card>
@@ -104,9 +106,15 @@ export function RulesView(props: RulesViewProps) {
     const [valueEditDialogContext, setValueEditDialogContext] = useState<Map<string, string>>(new Map())
     const [valueEditDialogInfo, setValueEditDialogInfo] = useState<string>("");
 
-    const applicableRules = useMemo(() => {
-        return getPotentialRules(props.rules, props.setting.configurableFeatures, partialContext);
-    }, [partialContext, props.setting, props.rules]);
+    const [confirmationDialogProps, setConfirmationDialogProps] = useState<{
+        title: string,
+        text: string,
+        callback: () => void,
+    } | null>(null)
+
+    const applicableRules = useMemo(() =>
+            getPotentialRules(props.rules, props.setting.configurableFeatures, partialContext)
+        , [partialContext, props.setting, props.rules]);
 
 
     const handleEditClick = (rule: PotentialRule) => () => {
@@ -115,6 +123,31 @@ export function RulesView(props: RulesViewProps) {
             rule_value: rule.rule.value,
             rule_context: rule.rule.context_features,
         })
+    }
+
+    const handleDeleteClick = (rule: PotentialRule) => () => {
+        setConfirmationDialogProps({
+                title: `Delete rule #${rule.rule.rule_id}?`,
+                text: Array.from(rule.rule.context_features).map(([key, value]) =>
+                    `${key}: ${value}`).join(", ") + " => " + props.setting.type.Format(rule.rule.value),
+                callback: () => {
+                    let promise = props.heksherClient.delete('/api/v1/rules/' + rule.rule.rule_id,)
+                        .then((_) => {
+                            let newBranch = ruleBranchCopy(props.rules);
+                            removeRule(newBranch, rule.rule, props.setting.configurableFeatures);
+                            props.onRuleChange(newBranch)
+                            props.processingCallback(null)
+                        }).catch((err) => {
+                            if (err.response) {
+                                console.log('Error deleting rule:', err.response, err.response.data)
+                            } else {
+                                console.log('Error deleting rule:', err, err.message)
+                            }
+                        })
+                    props.processingCallback(promise);
+                }
+            }
+        )
     }
 
     const rules = getRules(props.rules);
@@ -165,8 +198,7 @@ export function RulesView(props: RulesViewProps) {
                                 })}
                                 isDefault={rule.rule.rule_id === -1}
                                 onEditClick={handleEditClick(rule)}
-                                onDeleteClick={() => {
-                                }}
+                                onDeleteClick={handleDeleteClick(rule)}
                             />
                         </Collapse>
                     )}
@@ -269,11 +301,19 @@ export function RulesView(props: RulesViewProps) {
                 title={`Edit Rule: ${valueEditDialogExistingProps.rule_id}`}
                 initial_value={valueEditDialogExistingProps.rule_value}
                 on_value_changed={(v) => setValueEditDialogValue(v)}
-                on_validity_changed={() => {}}
+                on_validity_changed={() => {
+                }}
                 initialContext={valueEditDialogExistingProps.rule_context}
                 existingRuleBranch={props.rules}
                 contextFeatures={props.setting.configurableFeatures}
             />}
+            {confirmationDialogProps !== null && <ConfirmDialog
+                title={confirmationDialogProps.title}
+                handleConfirm={confirmationDialogProps.callback}
+                handleClose={() => setConfirmationDialogProps(null)}
+            >
+                {confirmationDialogProps.text}
+            </ConfirmDialog>}
             <Fab onClick={() => setValueEditDialogNewProps({})}
                  style={{
                      position: "absolute",
