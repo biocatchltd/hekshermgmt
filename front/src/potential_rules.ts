@@ -42,14 +42,14 @@ Note the following:
 2. only a set partial context can result in "e" or "w" matches, and only a set partial context can result in "p"
  matches. Therefore, for a given partial context, and two matches, and for any index, the values at the indices must
  either contain "e" or "w", or are both "p" matches.
-3. we always add the deafault rule with match "e" for set features in partial context, and "p(*)" for unset, we will
+3. we always add the default rule with match "e" for set features in partial context, and "p(*)" for unset, we will
  designate this rule as rule 0.
 
 Now, given a set of rules and matches for a partial context, we need to define unreachable rules. A rule in a set of
 rules and matches is "unreachable" if, for no completion of the partial context, will the rule be matched. Examples:
 
 1. Given the rules A and B with conditions: (x: x0, y: *) and (x: x0, y: y0), and the partial context (x: ?, y: y0).
- Then, even though both rules match, A is unreachable, because it presumes x to be x0, but if it is x0m then b will
+ Then, even though both rules match, A is unreachable, because it presumes x to be x0, but if it is x0, then b will
  supersede it.
 2. Given the rules A and B with conditions: (x: *) and (x: x0), and the partial context (x: x0). Then, even though
  both rules match, A is unreachable, because rule b always supersedes it.
@@ -79,7 +79,7 @@ result in an incomparable result.
     *. if A[i] is "p(a)" and B[i] is "p(a)", then neither rule supersedes the other yet, we continue.
     *. if A[i] is "p(*)" and B[i] is "p(*)", then neither rule supersedes the other yet, we continue.
     *. if A[i] is "p(a)" and B[i] is "p(b)", then the rules are incomparable. Since there is now a completion of the
-     partial context that A matches, and another completion that B matches.
+     partial context that only A matches, and another completion that only B matches.
     *. if A[i] is "p(*)" and B[i] is "p(b)", then while rule B will never supersede A (since we can complete the context
      so that A matches but B does not), rule A might supersede rule B. set the guard to 1 and continue. The tiebreaker
      advantage should also be reset (since it should be taken away from A if it exists, and giving it to B is

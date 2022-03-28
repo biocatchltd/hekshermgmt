@@ -27,7 +27,7 @@ import {TransitionGroup} from "react-transition-group";
 import {ValueEditDialogConstContext, ValueEditDialogNewContext, ValueViewDialog} from "./value_dialog";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {useMemo, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {AxiosInstance} from "axios";
 import {ModelGetRule} from "./index";
 import {ConfirmDialog} from "./confirm_dialog";
@@ -89,8 +89,7 @@ type RulesViewProps = {
 
 
 export function RulesView(props: RulesViewProps) {
-    const [partialContext, setPartialContext] = useState(props.initialContextFilter
-        ?? new Map<string, string>());
+    const [partialContext, setPartialContext] = useState(new Map<string, string>());
     const [valueViewDialogProps, setValueViewDialogProps] = useState<{
         title: string
         element: JSX.Element,
@@ -111,6 +110,10 @@ export function RulesView(props: RulesViewProps) {
         text: string,
         callback: () => void,
     } | null>(null)
+
+    useEffect(() => {
+        setPartialContext(props.initialContextFilter ?? new Map<string, string>())
+    }, [props.initialContextFilter])
 
     const applicableRules = useMemo(() =>
             getPotentialRules(props.rules, props.setting.configurableFeatures, partialContext)

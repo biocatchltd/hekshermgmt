@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Autocomplete, Stack, StackProps, TextField} from "@mui/material";
+import {Stack, StackProps, TextField} from "@mui/material";
 import {AutocompleteWithDefault} from "./autocomplete_with_default";
 
 type ContextSelectProps = {
@@ -19,14 +19,14 @@ export function ContextSelect(props: ContextSelectProps) {
                 options.sort();
 
                 return (
-                    <AutocompleteWithDefault key={key} props={{
+                    <AutocompleteWithDefault key={key+'@'+props.initialValue?.get(key)} props={{
                         style: {flexDirection: 'row', width: '100%', flex: 1},
                         renderInput: (params) => <TextField {...params} label={key}/>,
                         options: isConcrete ? ["*", ...options] : ["<none>", ...options],
                         sx: {maxWidth: 300},
                         freeSolo: isConcrete,
                         onInputChange: (event, value: string | null) => props.filterChangeCallback(key, value),
-                        value: props.initialValue?.get(key)
+                        value: props.initialValue?.get(key),
                     }} default={isConcrete ? "*" : ""}/>
                 )
             })}

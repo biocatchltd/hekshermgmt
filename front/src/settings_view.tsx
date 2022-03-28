@@ -3,7 +3,7 @@ import {Setting} from "./setting";
 import axios from 'axios';
 import {ModelGetSettings, ModelQuery, RuleSet} from "./index";
 import {
-    Backdrop,
+    Checkbox,
     Chip,
     ChipProps,
     CircularProgress,
@@ -16,8 +16,6 @@ import MUIDataTable, {MUIDataTableColumn} from "mui-datatables";
 import BallotIcon from "@mui/icons-material/Ballot";
 import {TruncChip} from "./trunc_string";
 import {ExpandChip} from "./expand_chip";
-import {ThemeProvider} from "@mui/styles";
-import {createTheme} from "@mui/material/styles";
 import {ContextSelect} from "./context_select";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -26,10 +24,16 @@ import * as React from "react";
 import {RulesView} from "./rules_view";
 import {ValueViewDialog} from "./value_dialog";
 import {RuleOptionsView} from "./rule_options_view";
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 const SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD = 50; // in milliseconds
 
-export function SettingsView() {
+type SettingsViewProps = {
+    setProcessing: (promise: Promise<any> | null) => void,
+}
+
+export function SettingsView(props: SettingsViewProps) {
     const [queryResult, setQueryResult] = useState<ModelQuery | null>(null);
 
     const [contextFeatures, setContextFeatures] = useState<string[] | null>(null);
@@ -52,8 +56,6 @@ export function SettingsView() {
     }, [ruleSet, rulesPanelSetting])
 
     const [valueViewProps, setValueViewProps] = useState<{ title: string; element: JSX.Element; } | null>(null);
-
-    const [processing, setProcessing] = useState<Promise<any> | null>(null)
 
     let base_url;
     let base_headers = {};
@@ -229,7 +231,7 @@ export function SettingsView() {
                         <IconButton onClick={() => {
                             setRulesPanelOpen(true);
                             setRulesPanelSetting(setting);
-                            setRulesPanelContextFilter(contextFilters)
+                            setRulesPanelContextFilter(contextFilters);
                         }}><BallotIcon/></IconButton>
                     </div>;
                 },
@@ -266,81 +268,77 @@ export function SettingsView() {
     }
     return (
         <Fragment>
-            <ThemeProvider theme={createTheme()}>
-                <ContextSelect context_options={ruleSet.context_options}
-                               filterChangeCallback={updateContextFilter}
-                               stackProps={{direction: "row", justifyContent: "flex-start", spacing: 2}}
-                />
-                <MUIDataTable
-                    title="Settings"
-                    data={data}
-                    columns={columns}
-                    options={{
-                        'responsive': 'standard',
-                        'print': false,
-                        'draggableColumns': {'enabled': true},
-                        'resizableColumns': true,
-                        // @ts-ignore
-                        'searchAlwaysOpen': true,
-                        'onViewColumnsChange': (c: string, a: string) => {
-                            if (a == 'add') {
-                                viewColumnPreference.current.set(c, true);
-                            } else if (a == 'remove') {
-                                viewColumnPreference.current.set(c, false);
-                            }
-                        },
-                        'selectableRows': 'none',
-                    }}
-                />
-                <Fab onClick={() => setRulesPanelOpen(!rulesPanelOpen)}
-                     style={{
-                         position: "absolute",
-                         top: 30,
-                         right: rulesPanelOpen ? rulesPanelButtonRight : 0,
-                         zIndex: 1250, // default z index is 1200 for drawers and I neither know nor care why
-                     }}
-                     variant={(rulesPanelSetting === null) ? "circular" : "extended"}
-                     disabled={rulesPanelSetting === null}>
-                    {<>{(rulesPanelOpen ? <ChevronRightIcon/> : <ChevronLeftIcon/>)}{rulesPanelSetting?.name}</>}
-                </Fab>
-                <ResizableDrawer
-                    drawerProps={{
-                        variant: "persistent",
-                        anchor: "right",
-                        open: rulesPanelOpen,
-                    }}
-                    minWidth={200}
-                    maxWidth={1000}
-                    onWidthChange={(w) => {
-                        // since this update happens a lot, we only change the location of the button once every X
-                        // millis todo is there a better way?
-                        if ((+new Date()) - lastSetRulesPanelButtonRightTime.current
-                            > SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD) {
-                            setRulesPanelButtonRight(w);
-                            lastSetRulesPanelButtonRightTime.current = +new Date();
+            <ContextSelect context_options={ruleSet.context_options}
+                           filterChangeCallback={updateContextFilter}
+                           stackProps={{direction: "row", justifyContent: "flex-start", spacing: 2}}
+            />
+            <MUIDataTable
+                title="Settings"
+                data={data}
+                columns={columns}
+                options={{
+                    'responsive': 'standard',
+                    'print': false,
+                    'draggableColumns': {'enabled': true},
+                    'resizableColumns': true,
+                    // @ts-ignore
+                    'searchAlwaysOpen': true,
+                    'onViewColumnsChange': (c: string, a: string) => {
+                        if (a == 'add') {
+                            viewColumnPreference.current.set(c, true);
+                        } else if (a == 'remove') {
+                            viewColumnPreference.current.set(c, false);
                         }
-                    }}
-                >
-                    {rulesPanelSetting !== null && rulesPanelRules !== null &&
-                        <RulesView setting={rulesPanelSetting}
-                                   rules={rulesPanelRules}
-                                   initialContextFilter={rulesPanelContextFilter ?? undefined}
-                                   parentContextOptions={ruleSet.context_options}
-
-                                   processingCallback={(p) => setProcessing(p)}
-                                   onRuleChange={(b: RuleBranch) => handleBranchChange(b)}
-                                   heksherClient={heksherClient}
-                        />
+                    },
+                    'selectableRows': 'none',
+                }}
+            />
+            <Fab onClick={() => setRulesPanelOpen(!rulesPanelOpen)}
+                 style={{
+                     position: "absolute",
+                     top: 30,
+                     right: rulesPanelOpen ? rulesPanelButtonRight : 0,
+                     zIndex: 1250, // default z index is 1200 for drawers and I neither know nor care why
+                 }}
+                 variant={(rulesPanelSetting === null) ? "circular" : "extended"}
+                 disabled={rulesPanelSetting === null}>
+                {<>{(rulesPanelOpen ? <ChevronRightIcon/> : <ChevronLeftIcon/>)}{rulesPanelSetting?.name}</>}
+            </Fab>
+            <ResizableDrawer
+                drawerProps={{
+                    variant: "persistent",
+                    anchor: "right",
+                    open: rulesPanelOpen,
+                }}
+                minWidth={200}
+                maxWidth={1000}
+                onWidthChange={(w) => {
+                    // since this update happens a lot, we only change the location of the button once every X
+                    // millis todo is there a better way?
+                    if ((+new Date()) - lastSetRulesPanelButtonRightTime.current
+                        > SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD) {
+                        setRulesPanelButtonRight(w);
+                        lastSetRulesPanelButtonRightTime.current = +new Date();
                     }
-                </ResizableDrawer>
-                <Backdrop open={processing !== null} sx={{zIndex: 1300}}>
-                    <CircularProgress/>
-                </Backdrop>
-                <ValueViewDialog open={valueViewProps !== null} onClose={() => setValueViewProps(null)}
-                                 title={valueViewProps !== null ? valueViewProps.title : ""}>
-                    {valueViewProps !== null && valueViewProps.element}
-                </ValueViewDialog>
-            </ThemeProvider>
+                }}
+            >
+                {rulesPanelSetting !== null && rulesPanelRules !== null &&
+                    <RulesView setting={rulesPanelSetting}
+                               rules={rulesPanelRules}
+                               initialContextFilter={rulesPanelContextFilter ?? undefined}
+                               parentContextOptions={ruleSet.context_options}
+
+                               processingCallback={(p) => props.setProcessing(p)}
+                               onRuleChange={(b: RuleBranch) => handleBranchChange(b)}
+                               heksherClient={heksherClient}
+                    />
+                }
+            </ResizableDrawer>
+
+            <ValueViewDialog open={valueViewProps !== null} onClose={() => setValueViewProps(null)}
+                             title={valueViewProps !== null ? valueViewProps.title : ""}>
+                {valueViewProps !== null && valueViewProps.element}
+            </ValueViewDialog>
         </Fragment>
     )
 }

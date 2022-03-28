@@ -4,6 +4,7 @@ import './index.css';
 import {getPotentialRules, RuleBranch, ruleBranchFromRules, RuleLeaf} from "./potential_rules";
 import {Setting} from "./setting";
 import {SettingsView} from "./settings_view";
+import {App} from "./app";
 
 export interface ModelGetSettings {
     settings: ModelGetSetting[];
@@ -83,7 +84,7 @@ export class RuleSet {
 
 ReactDOM
     .render(
-        <SettingsView/>,
+        <App/>,
         document
             .getElementById(
                 'root'
