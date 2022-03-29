@@ -12,9 +12,11 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "downlevelIteration": true,
+    "resolveJsonModule": true,
   },
   "include": [
-    "./src"
+    "./src",
+    ""
   ],
   "exclude": [
     "node_modules",

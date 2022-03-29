@@ -67,7 +67,7 @@ async def edit_rule(request: Request, id: int, app: HeksherMgmtBackend = applica
     resp_json = response.json()
     req_json: dict = await request.json()
     log_extras = {'rule_id': str(id), 'setting': resp_json['setting'], 'value': req_json['value'],
-                  **{'rule_' + k: v for k, v in resp_json['feature_values']}},
+                  **{('rule_' + k): v for k, v in resp_json['feature_values']}}
 
     # note both these routes return a 204 so their response isn't actually that important
     response = await app.heksher_client.put(f'/api/v1/rules/{id}/value', json=(await request.json()))
@@ -98,7 +98,7 @@ async def delete_rule(id: int, app: HeksherMgmtBackend = application):
         return convert_responses(response)
     resp_json = response.json()
     log_extras = {'rule_id': str(id), 'setting': resp_json['setting'],
-                  **{'rule_' + k: v for k, v in resp_json['feature_values']}},
+                  **{'rule_' + k: v for k, v in resp_json['feature_values']}}
 
     response = await app.heksher_client.delete(f'/api/v1/rules/{id}')
     if response.is_error:

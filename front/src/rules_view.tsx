@@ -18,7 +18,7 @@ import {
     Fab,
     CardActions,
     CardContent,
-    IconButton
+    IconButton, Box
 } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 import {TruncChip} from "./trunc_string";
@@ -45,6 +45,24 @@ type RuleCardProps = {
     onDeleteClick: () => void;
 }
 
+function getRuleKeys(rule: RuleLeaf): [string, any][] {
+    const important_keys = ['added_by', 'date'];
+    let keys = Array.from(rule.metadata.entries());
+    keys.sort((a, b) => {
+        if (important_keys.includes(a[0])) {
+            if (!important_keys.includes(b[0])) {
+                return -1;
+            }
+        } else if (important_keys.includes(b[0])) {
+            return 1;
+        }
+
+        return a[0].localeCompare(b[0]);
+    });
+    keys.push(['<id>', rule.rule_id]);
+    return keys;
+}
+
 function RuleCard(props: RuleCardProps) {
     return <Card sx={{p: '16px'}}>
         <Link variant="h6" underline="hover"
@@ -55,11 +73,14 @@ function RuleCard(props: RuleCardProps) {
                 :
                 <>
                     <Typography variant="body1">{props.potentialRule.get_assumptions_string()}</Typography>
-                    <Typography variant="body2">
-                        {
-                            Array.from(props.potentialRule.rule.metadata.entries()).map(([k, v]) => `${k}: ${JSON.stringify(v)}, `).join("") + `<id>: ${props.potentialRule.rule.rule_id}`
-                        }
-                    </Typography>
+                    {
+                        getRuleKeys(props.potentialRule.rule)
+                            .map(([k, v]) =>
+                                <Typography variant="body2">
+                                    {k}: <Box fontWeight='light' display='inline'>{JSON.stringify(v)}</Box>
+                                </Typography>
+                            )
+                    }
                 </>
             }
         </CardContent>

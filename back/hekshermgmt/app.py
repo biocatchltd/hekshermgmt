@@ -1,7 +1,7 @@
 import re
 from contextvars import ContextVar
 from dataclasses import dataclass
-from logging import getLogger
+from logging import getLogger, INFO, StreamHandler
 from typing import Optional, Dict
 
 import sentry_sdk
@@ -58,16 +58,18 @@ class HeksherMgmtBackend(FastAPI):
 
     async def startup(self):
         logstash_settings = logstash_settings_ev.get()
+        _logger = getLogger("hekshermgmt")
+        _logger.setLevel(INFO)
+        _logger.addHandler(StreamHandler())
         if logstash_settings is not None:
             handler = await create_tcp_handler(
                 logstash_settings.host,
                 logstash_settings.port,
                 extra={"hekshermgmt_version": __version__, **logstash_settings.tags},
             )
-            _logger = getLogger("hekshermgmt")
+            handler.setLevel(logstash_settings.level)
+            handler.addFilter(ContextVarFilter(user=user_cv))
             _logger.addHandler(handler)
-            _logger.setLevel(logstash_settings.level)
-            _logger.addFilter(ContextVarFilter(user=user_cv))
 
         sentry_dsn = sentry_dsn_ev.get()
         if sentry_dsn:
