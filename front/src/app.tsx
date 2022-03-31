@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {ThemeProvider} from "@mui/styles";
-import {Backdrop, CircularProgress, Button} from "@mui/material";
+import {Backdrop, CircularProgress, Button, Box} from "@mui/material";
 import * as React from "react";
 import {createTheme} from "@mui/material/styles";
 import {SettingsView} from "./settings_view";
@@ -12,12 +12,22 @@ export function App() {
 
     return (
         <ThemeProvider theme={createTheme()}>
+            {process.env.REACT_APP_BANNER_TEXT && <Box
+                sx={{
+                    width: 1,
+                    mb: 1,
+                    py: 1,
+                    pl: 3,
+                    backgroundColor: process.env.REACT_APP_BANNER_COLOR ?? 'yellow',
+                    color: process.env.REACT_APP_BANNER_TEXT_COLOR ?? 'black',
+                }}
+            >{process.env.REACT_APP_BANNER_TEXT}</Box>}
             <Backdrop open={processing !== null} sx={{zIndex: 1300}}>
                 <CircularProgress/>
             </Backdrop>
-            <About open={aboutOpen} onClose={()=>setAboutOpen(false)}/>
+            <About open={aboutOpen} onClose={() => setAboutOpen(false)}/>
             <SettingsView setProcessing={setProcessing}/>
-            <Button onClick={()=>setAboutOpen(true)}>About</Button>
+            <Button onClick={() => setAboutOpen(true)}>About</Button>
         </ThemeProvider>
     )
 }

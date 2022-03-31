@@ -24,8 +24,6 @@ import * as React from "react";
 import {RulesView} from "./rules_view";
 import {ValueViewDialog} from "./value_dialog";
 import {RuleOptionsView} from "./rule_options_view";
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 const SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD = 50; // in milliseconds
 

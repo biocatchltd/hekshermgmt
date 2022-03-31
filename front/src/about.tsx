@@ -11,8 +11,8 @@ export function About(props: AboutProps) {
     return <Dialog open={props.open} onClose={props.onClose}>
         <DialogTitle>Heksher Management v{process.env.REACT_APP_VERSION}</DialogTitle>
         <DialogContent>
-            Learn more about Heksher <Link href="https://github.com/biocatchltd/Heksher" target="_blank">here</Link><br/>
             From <Link href="https://github.com/biocatchltd" target="_blank">Biocatch</Link> with <FavoriteIcon/><br/>
+            Learn more about Heksher <Link href="https://github.com/biocatchltd/Heksher" target="_blank">here</Link><br/>
             <br/>
             <Link href="https://github.com/biocatchltd/hekshermgmt" target="_blank">Source for this site</Link>
         </DialogContent>
