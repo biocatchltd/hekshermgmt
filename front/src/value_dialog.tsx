@@ -102,6 +102,13 @@ type ValueEditDialogNewContextProps = {
     onInfoChange: (info: string) => void;
 };
 
+/*
+we have three different dialogs here:
+1. changeable context, for new rules
+2. constant context, for existing rules
+3. no context, for specific elements of values
+ */
+
 // todo common supercomp?
 export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps) {
     const [valueError, setValueError] = useState('');

@@ -30,22 +30,43 @@ import { TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 
 export interface SettingType<T> {
+    /**
+     * The name of the setting, in heksher format
+     */
     toString(): string;
 
+    /**
+     * convert a value of the type to a string
+     */
     Format(value: T): string;
 
+    /**
+     * convert a value of the type to a value that can be indexed by a datatable
+     */
     asData(value: T): string | number | (string | number)[];
 
+    /**
+     * convert a value of the type to a JSX element for viewing
+     */
     asViewElement(value: T): JSX.Element;
 
+    /**
+     * convert a value of the type to a JSX element for editing
+     */
     asEditElement(
         value: T,
         onChange: (new_value: T) => void,
         onValidChange: (newError: string | null) => void,
     ): JSX.Element;
 
+    /**
+     * Is the edit element for this type small, so that it can be inlined into larger edits?
+     */
     editElementShort(): boolean;
 
+    /**
+     * A sensible default value for this type
+     */
     defaultValue(): T;
 }
 

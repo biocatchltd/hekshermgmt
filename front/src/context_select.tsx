@@ -10,6 +10,11 @@ type ContextSelectProps = {
     isConcrete?: boolean;
 };
 
+/**
+ * a component that allows selection of a context.
+ * This component has 2 modes: concrete, where the selected context must be applicable to a rule.
+ * And non-concrete, where the selected context is just a filter.
+ */
 export function ContextSelect(props: ContextSelectProps) {
     const { isConcrete = false } = props;
     return (

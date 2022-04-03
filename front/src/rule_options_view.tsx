@@ -10,6 +10,9 @@ type RuleOptionsViewProps = {
     type: SettingType<any>;
 };
 
+/**
+ * This is the dialog that happens when you click on the "X Options" in the value preview.
+ */
 export function RuleOptionsView(props: RuleOptionsViewProps) {
     const [dialogTarget, setDialogTarget] = useState<PotentialRule | null>(null);
 

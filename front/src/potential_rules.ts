@@ -144,6 +144,9 @@ export class PotentialRule {
 
 export type RuleBranch = Map<string, RuleLeaf> | Map<string, RuleBranch>; // the key "*" specified wildcard
 
+/**
+ * collate a set of rules into a tree structure.
+ */
 export function ruleBranchFromRules(rules: RuleLeaf[], configurable_features: string[], depth = 0): RuleBranch {
     const cf = configurable_features[depth];
     const ret: RuleBranch = new Map();
@@ -317,7 +320,7 @@ export function getPotentialRules(
     context_filters: Map<string, string>,
 ): PotentialRule[] {
     const results = _potential_rules(branch, configurable_features, context_filters, []);
-    const blacklisted_indices = new Set<number>();
+    const blacklisted_indices = new Set<number>(); // the indices of rules that are superseded
     const ret: PotentialRule[] = [];
     for (let i = 0; i < results.length; i++) {
         if (blacklisted_indices.has(i)) {

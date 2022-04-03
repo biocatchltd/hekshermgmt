@@ -38,7 +38,10 @@ type RuleCardProps = {
     onDeleteClick: () => void;
 };
 
-function getRuleKeys(rule: RuleLeaf): [string, any][] {
+/**
+ * extract the metadata of a rule, ordered by importance
+ */
+function getRuleMetadataKeys(rule: RuleLeaf): [string, any][] {
     const important_keys = ['added_by', 'date'];
     const keys = Array.from(rule.metadata.entries());
     keys.sort((a, b) => {
@@ -68,7 +71,7 @@ function RuleCard(props: RuleCardProps) {
                 ) : (
                     <>
                         <Typography variant='body1'>{props.potentialRule.get_assumptions_string()}</Typography>
-                        {getRuleKeys(props.potentialRule.rule).map(([k, v]) => (
+                        {getRuleMetadataKeys(props.potentialRule.rule).map(([k, v]) => (
                             <Typography variant='body2' key={k}>
                                 {k}: {JSON.stringify(v)}
                             </Typography>

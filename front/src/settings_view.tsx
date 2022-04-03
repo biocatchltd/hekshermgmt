@@ -136,7 +136,7 @@ export function SettingsView(props: SettingsViewProps) {
         getPotentialRules(ruleSet!.rules_per_setting.get(s.name)!, s.configurableFeatures, contextFilters),
     );
     const data = settings.map((setting, i) => setting.to_row(contextFeatures!, applicable_rules[i]));
-    const columns: (string | MUIDataTableColumn)[] = [
+    const columns: MUIDataTableColumn[] = [
         {
             name: 'name',
             options: {
@@ -273,7 +273,7 @@ export function SettingsView(props: SettingsViewProps) {
     ];
     const seen_mds = new Set<string>();
     for (const setting of settings) {
-        for (const key in setting.metadata) {
+        for (const key of setting.metadata.keys()) {
             if (seen_mds.has(key)) {
                 continue;
             }
@@ -341,6 +341,7 @@ export function SettingsView(props: SettingsViewProps) {
                 minWidth={200}
                 maxWidth={1000}
                 onWidthChange={(w) => {
+                    // we need to move the button to be on the drawer's edge
                     // since this update happens a lot, we only change the location of the button once every X
                     // millis todo is there a better way?
                     if (

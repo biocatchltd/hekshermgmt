@@ -9,6 +9,9 @@ type TruncChipProps = {
     chipProps?: ChipProps;
 };
 
+/**
+ * A truncated string that can be expanded to show the full string.
+ */
 export function TruncChip(props: TruncChipProps) {
     const [overflow, setOverflow] = React.useState(false);
     const chip = <Chip {...props.chipProps} style={{ height: '30px' }} label={props.value} />;
