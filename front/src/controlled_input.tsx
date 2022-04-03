@@ -5,87 +5,116 @@ import {
     Switch,
     SwitchProps,
     RadioGroup,
-    FormControlLabel, Radio, ListItem, ListItemIcon, ListItemText, Card, CardHeader, Divider, Grid, Button
-} from "@mui/material";
+    FormControlLabel,
+    Radio,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Card,
+    CardHeader,
+    Divider,
+    Grid,
+    Button,
+} from '@mui/material';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
-import {useEffect, useState} from "react";
-import {primitive_to_str} from "./setting_type";
+import { useEffect, useState } from 'react';
+import { primitive_to_str } from './setting_type';
+import * as React from 'react';
 
 type ControlledTextFieldProps = {
-    initialValue: string
-    textFieldProps: TextFieldProps
-    onChange: (s: string) => void
-    onValidityChange?: (err: string) => void
-    errorMsg?: (s: string) => (string|null)
-}
+    initialValue: string;
+    textFieldProps: TextFieldProps;
+    onChange: (s: string) => void;
+    onValidityChange?: (err: string) => void;
+    errorMsg?: (s: string) => string | null;
+};
 
 export function ControlledTextField(props: ControlledTextFieldProps) {
-    let [value, setValue] = useState<string>(props.initialValue)
-    let [errorText, setErrorText] = useState("");
+    const [value, setValue] = useState<string>(props.initialValue);
+    const [errorText, setErrorText] = useState('');
 
-    if (props.errorMsg !== undefined){
-        useEffect(()=>{
-            let msg = props.errorMsg!(value)
-            setErrorText(msg ?? "")
-        }, [value])
-        if (props.onValidityChange !== undefined){
-            useEffect(()=>{
-                props.onValidityChange!(errorText);
-            }, [errorText])
+    if (props.errorMsg !== undefined) {
+        useEffect(() => {
+            const msg = props.errorMsg?.(value);
+            setErrorText(msg ?? '');
+        }, [value]);
+        if (props.onValidityChange !== undefined) {
+            useEffect(() => {
+                props.onValidityChange?.(errorText);
+            }, [errorText]);
         }
     }
 
-    return <TextField {...props.textFieldProps} value={value} onChange={e => {
-        props.onChange(e.target.value);
-        setValue(e.target.value);
-    }} error={errorText!=""} helperText={errorText}/>
+    return (
+        <TextField
+            {...props.textFieldProps}
+            value={value}
+            onChange={(e) => {
+                props.onChange(e.target.value);
+                setValue(e.target.value);
+            }}
+            error={errorText != ''}
+            helperText={errorText}
+        />
+    );
 }
 
 type ControlledSwitchProps = {
-    initialValue: boolean
-    switchProps?: SwitchProps
-    onChange: (b: boolean) => void
-}
+    initialValue: boolean;
+    switchProps?: SwitchProps;
+    onChange: (b: boolean) => void;
+};
 
 export function ControlledSwitch(props: ControlledSwitchProps) {
-    let [value, setValue] = useState<boolean>(props.initialValue)
+    const [value, setValue] = useState<boolean>(props.initialValue);
 
-    return <Switch {...props.switchProps} value={value} onChange={(e, b) => {
-        props.onChange(b);
-        setValue(b);
-    }}/>
+    return (
+        <Switch
+            {...props.switchProps}
+            value={value}
+            onChange={(e, b) => {
+                props.onChange(b);
+                setValue(b);
+            }}
+        />
+    );
 }
 
 type ControlledRadioGroupProps = {
-    options: any[]
-    optionLabels: string[]
-    initialValue: any
-    onChange: (v: any) => void
-}
+    options: any[];
+    optionLabels: string[];
+    initialValue: any;
+    onChange: (v: any) => void;
+};
 
 export function ControlledRadioGroup(props: ControlledRadioGroupProps) {
-    let [value, setValue] = useState(props.initialValue)
+    const [value, setValue] = useState(props.initialValue);
 
-    return <RadioGroup value={value} onChange={e => {
-        props.onChange(e.target.value)
-        setValue(e.target.value)
-    }}>
-        {props.options.map((v, i) =>
-            <FormControlLabel control={<Radio/>} label={props.optionLabels[i]} value={v} key={i}/>
-        )}
-    </RadioGroup>
+    return (
+        <RadioGroup
+            value={value}
+            onChange={(e) => {
+                props.onChange(e.target.value);
+                setValue(e.target.value);
+            }}
+        >
+            {props.options.map((v, i) => (
+                <FormControlLabel control={<Radio />} label={props.optionLabels[i]} value={v} key={i} />
+            ))}
+        </RadioGroup>
+    );
 }
 
 type ControlledTransferListProps = {
-    initialIncluded: Set<any>
-    initialExcluded: Set<any>
-    onChange: (v: any[]) => void
-}
+    initialIncluded: Set<any>;
+    initialExcluded: Set<any>;
+    onChange: (v: any[]) => void;
+};
 
 export function ControlledTransferList(props: ControlledTransferListProps) {
-    let [included, setIncluded] = useState(props.initialIncluded)
-    let [excluded, setExcluded] = useState(props.initialExcluded)
+    const [included, setIncluded] = useState(props.initialIncluded);
+    const [excluded, setExcluded] = useState(props.initialExcluded);
 
     const transfer = (value: number) => () => {
         const newIncluded = new Set(included);
@@ -104,71 +133,65 @@ export function ControlledTransferList(props: ControlledTransferListProps) {
     };
 
     const includeAll = () => {
-        let newIncluded = new Set([...included, ...excluded]);
+        const newIncluded = new Set([...included, ...excluded]);
         setIncluded(newIncluded);
         setExcluded(new Set());
         props.onChange(Array.from(newIncluded));
-    }
+    };
     const excludeAll = () => {
         setIncluded(new Set());
         setExcluded(new Set([...included, ...excluded]));
         props.onChange([]);
-    }
+    };
 
     const customList = (title: string, items: Set<any>, is_left: boolean) => {
-        let ordered_items = Array.from(items);
-        ordered_items.sort((a, b) => primitive_to_str(a).localeCompare(primitive_to_str(b)))
-        return <Card>
-            <CardHeader
-                sx={{px: 2, py: 1}}
-                title={title}
-            />
-            <Divider/>
-            <List dense component="div" role="list">
-                {ordered_items.map((value: any) => {
-                    const labelId = `transfer-list-item-${value}-label`;
+        const ordered_items = Array.from(items);
+        ordered_items.sort((a, b) => primitive_to_str(a).localeCompare(primitive_to_str(b)));
+        return (
+            <Card>
+                <CardHeader sx={{ px: 2, py: 1 }} title={title} />
+                <Divider />
+                <List dense component='div' role='list'>
+                    {ordered_items.map((value: any) => {
+                        const labelId = `transfer-list-item-${value}-label`;
 
-                    return (
-                        <ListItem
-                            key={value}
-                            role="listitem"
-                            button
-                            onClick={transfer(value)}
-                        >
-                            <ListItemIcon>
-                                {is_left ? <ArrowCircleRightIcon/> : <ArrowCircleLeftIcon/>}
-                            </ListItemIcon>
-                            <ListItemText id={labelId} primary={primitive_to_str(value)}/>
-                        </ListItem>
-                    );
-                })}
-                <ListItem/>
-            </List>
-        </Card>;
+                        return (
+                            <ListItem key={value} role='listitem' button onClick={transfer(value)}>
+                                <ListItemIcon>
+                                    {is_left ? <ArrowCircleRightIcon /> : <ArrowCircleLeftIcon />}
+                                </ListItemIcon>
+                                <ListItemText id={labelId} primary={primitive_to_str(value)} />
+                            </ListItem>
+                        );
+                    })}
+                    <ListItem />
+                </List>
+            </Card>
+        );
     };
 
     return (
-        <Grid container spacing={2} justifyContent="center" alignItems="center">
+        <Grid container spacing={2} justifyContent='center' alignItems='center'>
             <Grid item>{customList('Included', included, true)}</Grid>
             <Grid item>
-                <Grid container direction="column" alignItems="center">
+                <Grid container direction='column' alignItems='center'>
                     <Button
-                        sx={{my: 0.5}}
-                        variant="outlined"
-                        size="small"
+                        sx={{ my: 0.5 }}
+                        variant='outlined'
+                        size='small'
                         onClick={excludeAll}
                         disabled={included.size === 0}
-                        aria-label="exclude all"
+                        aria-label='exclude all'
                     >
                         ≫
                     </Button>
                     <Button
-                        sx={{my: 0.5}}
-                        variant="outlined"
-                        size="small"
+                        sx={{ my: 0.5 }}
+                        variant='outlined'
+                        size='small'
                         onClick={includeAll}
                         disabled={excluded.size === 0}
-                        aria-label="include all"
+                        aria-label='include all'
                     >
                         ≪
                     </Button>

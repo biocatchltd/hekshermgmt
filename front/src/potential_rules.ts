@@ -1,8 +1,8 @@
-import {ModelGetRule, ModelRule} from "./index";
+import { ModelGetRule, ModelRule } from './index';
 
-const exact_match = Symbol("e");
-const wildcard = Symbol("w");
-const presume_wildcard = Symbol("p(*)");
+const exact_match = Symbol('e');
+const wildcard = Symbol('w');
+const presume_wildcard = Symbol('p(*)');
 type ContextMatch = typeof exact_match | typeof wildcard | typeof presume_wildcard | string;
 
 /*
@@ -91,15 +91,15 @@ there is no tiebreaker, then the rules are incomparable.
  */
 
 type RuleMatch = {
-    rule: RuleLeaf
-    context_matches: ContextMatch[]
-}
+    rule: RuleLeaf;
+    context_matches: ContextMatch[];
+};
 
 export class RuleLeaf {
-    value: any
-    context_features: Map<string, string>
-    rule_id: number
-    metadata: Map<string, any>
+    value: any;
+    context_features: Map<string, string>;
+    rule_id: number;
+    metadata: Map<string, any>;
 
     constructor(model: ModelRule);
     constructor(model: ModelGetRule, id: number);
@@ -118,92 +118,94 @@ export class RuleLeaf {
 }
 
 export class PotentialRule {
-    rule: RuleLeaf
-    assumptions: Map<string, string>
+    rule: RuleLeaf;
+    assumptions: Map<string, string>;
 
     constructor(match: RuleMatch, context_features: string[]) {
-        this.rule = match.rule
-        this.assumptions = new Map()
-        for (let i in match.context_matches) {
-            let match_element = match.context_matches[i]
-            let cf = context_features[i]
+        this.rule = match.rule;
+        this.assumptions = new Map();
+        for (const i in match.context_matches) {
+            const match_element = match.context_matches[i];
+            const cf = context_features[i];
             if (match_element === presume_wildcard) {
-                this.assumptions.set(cf, '*')
+                this.assumptions.set(cf, '*');
             } else if (typeof match_element === 'string') {
-                this.assumptions.set(cf, match_element)
+                this.assumptions.set(cf, match_element);
             }
         }
     }
 
     get_assumptions_string(): string {
-        return Array.from(this.assumptions.entries()).map(([cf, value]) => `${cf}: ${value}`).join(', ')
+        return Array.from(this.assumptions.entries())
+            .map(([cf, value]) => `${cf}: ${value}`)
+            .join(', ');
     }
 }
 
-export type RuleBranch = Map<string, RuleLeaf> | Map<string, RuleBranch>  // the key "*" specified wildcard
+export type RuleBranch = Map<string, RuleLeaf> | Map<string, RuleBranch>; // the key "*" specified wildcard
 
-export function ruleBranchFromRules(rules: RuleLeaf[], configurable_features: string[], depth: number = 0): RuleBranch {
-    let cf = configurable_features[depth];
-    let ret: RuleBranch = new Map()
+export function ruleBranchFromRules(rules: RuleLeaf[], configurable_features: string[], depth = 0): RuleBranch {
+    const cf = configurable_features[depth];
+    const ret: RuleBranch = new Map();
     if (depth == configurable_features.length - 1) {
         // we are at the bottom of the tree, add direct rules
-        for (let rule of rules) {
+        for (const rule of rules) {
             // @ts-ignore
-            ret.set(rule.context_features.get(cf) ?? "*", rule);
+            ret.set(rule.context_features.get(cf) ?? '*', rule);
         }
         return ret;
     } else {
         // recurse
-        let children: Record<string, RuleLeaf[]> = {}
-        for (let rule of rules) {
-            let value = rule.context_features.get(cf) ?? "*";
+        const children: Record<string, RuleLeaf[]> = {};
+        for (const rule of rules) {
+            const value = rule.context_features.get(cf) ?? '*';
             if (!(value in children)) {
-                children[value] = []
+                children[value] = [];
             }
-            children[value].push(rule)
+            children[value].push(rule);
         }
-        for (let value in children) {
+        for (const value in children) {
             // @ts-ignore
-            ret.set(value, ruleBranchFromRules(children[value], configurable_features, depth + 1))
+            ret.set(value, ruleBranchFromRules(children[value], configurable_features, depth + 1));
         }
         return ret;
     }
 }
 
 export function getRules(rules: RuleBranch): RuleLeaf[] {
-    let ret: RuleLeaf[] = []
-    for (let value of rules.values()) {
+    const ret: RuleLeaf[] = [];
+    for (const value of rules.values()) {
         if (value instanceof RuleLeaf) {
-            ret.push(value)
+            ret.push(value);
         } else {
-            ret.push(...getRules(value))
+            ret.push(...getRules(value));
         }
     }
-    return ret
+    return ret;
 }
 
 export function getRule(rules: RuleBranch, context: Map<string, string>, features: string[]): RuleLeaf | null {
     let current: any = rules;
-    for (let feature of features) {
-        let child = current.get(context.get(feature) ?? "*")
+    for (const feature of features) {
+        const child = current.get(context.get(feature) ?? '*');
         if (child === undefined) {
             return null;
         }
         current = child;
     }
-    return current
+    return current;
 }
 
 export function AddRule(rules: RuleBranch, newRule: RuleLeaf, features: string[]) {
     let current: any = rules;
-    for (let feature_idx in features) {
-        let feature = features[feature_idx];
-        let key = newRule.context_features.get(feature) ?? "*";
-        if (parseInt(feature_idx) === features.length - 1){
+    for (const feature_idx in features) {
+        const feature = features[feature_idx];
+        const key = newRule.context_features.get(feature) ?? '*';
+        if (parseInt(feature_idx) === features.length - 1) {
             current.set(key, newRule);
-            return
-        } else{
-            let child = current.get(key)
+            return;
+        } else {
+            let child = current.get(key);
             if (child === undefined) {
                 child = new Map();
                 current.set(key, child);
@@ -215,13 +217,13 @@ export function AddRule(rules: RuleBranch, newRule: RuleLeaf, features: string[]
 
 export function ReplaceRule(rules: RuleBranch, newRule: RuleLeaf, features: string[]) {
     let current: any = rules;
-    for (let feature_idx in features) {
-        let feature = features[feature_idx];
-        let key = newRule.context_features.get(feature) ?? "*";
-        if (parseInt(feature_idx) === features.length - 1){
+    for (const feature_idx in features) {
+        const feature = features[feature_idx];
+        const key = newRule.context_features.get(feature) ?? '*';
+        if (parseInt(feature_idx) === features.length - 1) {
             current.set(key, newRule);
-            return
-        } else{
+            return;
+        } else {
             current = current.get(key)!;
         }
     }
@@ -229,81 +231,102 @@ export function ReplaceRule(rules: RuleBranch, newRule: RuleLeaf, features: stri
 
 export function removeRule(rules: RuleBranch, rule_to_remove: RuleLeaf, features: string[]) {
     let current: any = rules;
-    for (let feature_idx in features) {
-        let feature = features[feature_idx];
-        let key = rule_to_remove.context_features.get(feature) ?? "*";
-        if (parseInt(feature_idx) === features.length - 1){
+    for (const feature_idx in features) {
+        const feature = features[feature_idx];
+        const key = rule_to_remove.context_features.get(feature) ?? '*';
+        if (parseInt(feature_idx) === features.length - 1) {
             current.delete(key);
-            return
-        } else{
+            return;
+        } else {
             current = current.get(key)!;
         }
     }
 }
 
-export function ruleBranchCopy(rules: RuleBranch): RuleBranch{
+export function ruleBranchCopy(rules: RuleBranch): RuleBranch {
     // @ts-ignore
     return new Map(rules);
 }
 
-function _potential_rules(branch: RuleBranch, context_features: string[], context_filters: Map<string, string>, context_matches: ContextMatch[]): RuleMatch[] {
-    let cf = context_features[context_matches.length];
+function _potential_rules(
+    branch: RuleBranch,
+    context_features: string[],
+    context_filters: Map<string, string>,
+    context_matches: ContextMatch[],
+): RuleMatch[] {
+    const cf = context_features[context_matches.length];
     let filter: string | null = context_filters.get(cf) ?? null;
-    if (filter === ""){
+    if (filter === '') {
         filter = null;
     }
     let ret: RuleMatch[] = [];
     if (context_matches.length == context_features.length - 1) {
         // we are at the bottom of the tree, add direct rules
         if (filter !== null) {
-            let direct_match = branch.get(filter) as RuleLeaf | undefined;
+            const direct_match = branch.get(filter) as RuleLeaf | undefined;
             if (direct_match !== undefined) {
-                ret.push({'rule': direct_match, 'context_matches': [...context_matches, exact_match]})
+                ret.push({ rule: direct_match, context_matches: [...context_matches, exact_match] });
             }
-            let wild_match = branch.get("*") as RuleLeaf | undefined;
+            const wild_match = branch.get('*') as RuleLeaf | undefined;
             if (wild_match !== undefined) {
-                ret.push({'rule': wild_match, 'context_matches': [...context_matches, wildcard]})
+                ret.push({ rule: wild_match, context_matches: [...context_matches, wildcard] });
             }
         } else {
-            for (let [key, rule] of branch.entries()) {
+            for (const [key, rule] of branch.entries()) {
                 ret.push({
-                    'rule': rule as RuleLeaf,
-                    'context_matches': [...context_matches, key == "*" ? presume_wildcard : key]
-                })
+                    rule: rule as RuleLeaf,
+                    context_matches: [...context_matches, key == '*' ? presume_wildcard : key],
+                });
             }
         }
     } else {
         // recurse
         if (filter !== null) {
-            let direct_match = branch.get(filter) as RuleBranch | undefined;
+            const direct_match = branch.get(filter) as RuleBranch | undefined;
             if (direct_match !== undefined) {
-                ret = ret.concat(_potential_rules(direct_match, context_features, context_filters, [...context_matches, exact_match]))
+                ret = ret.concat(
+                    _potential_rules(direct_match, context_features, context_filters, [
+                        ...context_matches,
+                        exact_match,
+                    ]),
+                );
             }
-            let wild_match = branch.get("*") as RuleBranch | undefined;
+            const wild_match = branch.get('*') as RuleBranch | undefined;
             if (wild_match !== undefined) {
-                ret = ret.concat(_potential_rules(wild_match, context_features, context_filters, [...context_matches, wildcard]))
+                ret = ret.concat(
+                    _potential_rules(wild_match, context_features, context_filters, [...context_matches, wildcard]),
+                );
             }
         } else {
-            for (let [key, child] of branch.entries()) {
-                ret = ret.concat(_potential_rules(child as RuleBranch, context_features, context_filters, [...context_matches, key == "*" ? presume_wildcard : key]))
+            for (const [key, child] of branch.entries()) {
+                ret = ret.concat(
+                    _potential_rules(child as RuleBranch, context_features, context_filters, [
+                        ...context_matches,
+                        key == '*' ? presume_wildcard : key,
+                    ]),
+                );
             }
         }
     }
-    return ret
+    return ret;
 }
 
-export function getPotentialRules(branch: RuleBranch, configurable_features: string[], context_filters: Map<string, string>): PotentialRule[] {
-    let results = _potential_rules(branch, configurable_features, context_filters, []);
-    let blacklisted_indices = new Set<number>();
-    let ret: PotentialRule[] = [];
+export function getPotentialRules(
+    branch: RuleBranch,
+    configurable_features: string[],
+    context_filters: Map<string, string>,
+): PotentialRule[] {
+    const results = _potential_rules(branch, configurable_features, context_filters, []);
+    const blacklisted_indices = new Set<number>();
+    const ret: PotentialRule[] = [];
     for (let i = 0; i < results.length; i++) {
         if (blacklisted_indices.has(i)) {
             continue;
         }
-        let candidate = results[i];
+        const candidate = results[i];
         for (let j = i + 1; j < results.length; j++) {
-            let challenger = results[j];
-            let cmp = compare_matches(candidate.context_matches, challenger.context_matches);
+            const challenger = results[j];
+            const cmp = compare_matches(candidate.context_matches, challenger.context_matches);
             if (cmp == -1) {
                 // the candidate supersedes the challenger, so the challenger is blacklisted
                 blacklisted_indices.add(j);
@@ -311,12 +334,12 @@ export function getPotentialRules(branch: RuleBranch, configurable_features: str
             if (cmp == 1) {
                 // the challenger supersedes the candidate, so the candidate is blacklisted
                 blacklisted_indices.add(i);
-                break // we can break here, since whatever challenger the candidate would blacklist
+                break; // we can break here, since whatever challenger the candidate would blacklist
                 // will be blacklisted by j.
             }
         }
         if (!blacklisted_indices.has(i)) {
-            ret.push(new PotentialRule(candidate, configurable_features))
+            ret.push(new PotentialRule(candidate, configurable_features));
         }
     }
     // finally, we sort the rules by their last exact-match condition
@@ -329,65 +352,57 @@ function compare_matches(a: ContextMatch[], b: ContextMatch[]): number {
     let advantage = 0; // -1: a is better, 1: b is better
     for (let i = 0; i < a.length; i++) {
         // filter is set
-        if (a[i] === exact_match
-            && b[i] === exact_match) {
-        } else if (a[i] === wildcard
-            && b[i] === wildcard) {
-        } else if (a[i] === exact_match
-            && b[i] === wildcard) {
+        if (a[i] === exact_match && b[i] === exact_match) {
+            continue;
+        } else if (a[i] === wildcard && b[i] === wildcard) {
+            continue;
+        } else if (a[i] === exact_match && b[i] === wildcard) {
             advantage = -1;
-        } else if (a[i] === wildcard
-            && b[i] === exact_match) {
+        } else if (a[i] === wildcard && b[i] === exact_match) {
             advantage = 1;
         } // filter is unset
-        else if (a[i] === presume_wildcard
-            && b[i] === presume_wildcard) {
-        } else if (a[i] === presume_wildcard
-            && typeof b[i] === 'string') {
+        else if (a[i] === presume_wildcard && b[i] === presume_wildcard) {
+            continue;
+        } else if (a[i] === presume_wildcard && typeof b[i] === 'string') {
             if (guard === 1) {
                 return 0;
             }
-            guard = -1
+            guard = -1;
             advantage = 0;
-        } else if (typeof a[i] === 'string'
-            && b[i] === presume_wildcard) {
+        } else if (typeof a[i] === 'string' && b[i] === presume_wildcard) {
             if (guard === -1) {
                 return 0;
             }
-            guard = 1
+            guard = 1;
             advantage = 0;
-        } else if (typeof a[i] === 'string'
-            && typeof b[i] === 'string'
-            && a[i] === b[i]) {
-        } else if (typeof a[i] === 'string'
-            && typeof b[i] === 'string'
-            && a[i] !== b[i]) {
+        } else if (typeof a[i] === 'string' && typeof b[i] === 'string' && a[i] === b[i]) {
+            continue;
+        } else if (typeof a[i] === 'string' && typeof b[i] === 'string' && a[i] !== b[i]) {
             return 0;
         } else {
-            throw new Error("unexpected match type")
+            throw new Error('unexpected match type');
         }
     }
-    if (advantage !== 0 && guard !== -advantage)
-        return advantage;
+    if (advantage !== 0 && guard !== -advantage) return advantage;
     return 0;
 }
 
 function compare_rules(a: RuleLeaf, b: RuleLeaf, configurable_features: string[]): number {
-    let tiebreaker = 0
+    let tiebreaker = 0;
     for (let i = configurable_features.length - 1; i >= 0; i--) {
-        let cf = configurable_features[i];
-        let a_val = a.context_features.get(cf) ?? "*";
-        let b_val = b.context_features.get(cf) ?? "*";
+        const cf = configurable_features[i];
+        const a_val = a.context_features.get(cf) ?? '*';
+        const b_val = b.context_features.get(cf) ?? '*';
         if (a_val === '*') {
             if (b_val === '*') {
-                continue
+                continue;
             } else {
-                return -1
+                return -1;
             }
         } else if (b_val === '*') {
-            return 1
+            return 1;
         }
         tiebreaker = a_val.localeCompare(b_val);
     }
-    return tiebreaker
+    return tiebreaker;
 }

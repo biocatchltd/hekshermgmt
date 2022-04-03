@@ -1,13 +1,13 @@
-import {settingType, SettingType} from "./setting_type";
-import {PotentialRule} from "./potential_rules";
-import {ModelGetSetting} from "./index";
+import { settingType, SettingType } from './setting_type';
+import { PotentialRule } from './potential_rules';
+import { ModelGetSetting } from './index';
 
 export class Setting {
-    name: string
-    type: SettingType<any>
-    default_value: any
-    configurableFeatures: string[]
-    metadata: Map<string, any>
+    name: string;
+    type: SettingType<any>;
+    default_value: any;
+    configurableFeatures: string[];
+    metadata: Map<string, any>;
 
     constructor(model: ModelGetSetting) {
         this.name = model.name;
@@ -18,28 +18,28 @@ export class Setting {
     }
 
     to_row(context_feature_names: string[], applicable_rules: PotentialRule[]): Record<string, any> {
-        let ret: { [key: string]: any } = {
+        const ret: { [key: string]: any } = {
             name: this.name,
             type: this.type.toString(),
             default_value: this.type.asData(this.default_value),
             configurable_features: this.configurableFeatures.join(', '),
-        }
+        };
         // note that there's always at least one applicable rule, since we include the default
         if (applicable_rules.length > 1) {
-            ret['value_for_context'] = "<multiple>";
+            ret['value_for_context'] = '<multiple>';
         } else if (applicable_rules[0].rule.rule_id === -1) {
             // default rule
-            ret['value_for_context'] = ret['default_value']
+            ret['value_for_context'] = ret['default_value'];
         } else {
             ret['value_for_context'] = this.type.asData(applicable_rules[0].rule.value);
         }
 
-        for (let [key, value] of this.metadata) {
-            ret["md." + key] = JSON.stringify(value);
+        for (const [key, value] of this.metadata) {
+            ret['md.' + key] = JSON.stringify(value);
         }
-        for (let cf of context_feature_names) {
-            ret["cf." + cf] = this.configurableFeatures.includes(cf)
+        for (const cf of context_feature_names) {
+            ret['cf.' + cf] = this.configurableFeatures.includes(cf);
         }
-        return ret
+        return ret;
     }
 }
