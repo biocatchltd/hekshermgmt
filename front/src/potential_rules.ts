@@ -256,6 +256,7 @@ function _potential_rules(
     context_features: string[],
     context_filters: Map<string, string>,
     context_matches: ContextMatch[],
+    value_filter: (value: any) => any,
 ): RuleMatch[] {
     const cf = context_features[context_matches.length];
     let filter: string | null = context_filters.get(cf) ?? null;
@@ -267,19 +268,21 @@ function _potential_rules(
         // we are at the bottom of the tree, add direct rules
         if (filter !== null) {
             const direct_match = branch.get(filter) as RuleLeaf | undefined;
-            if (direct_match !== undefined) {
+            if (direct_match !== undefined && value_filter(direct_match.value)) {
                 ret.push({ rule: direct_match, context_matches: [...context_matches, exact_match] });
             }
             const wild_match = branch.get('*') as RuleLeaf | undefined;
-            if (wild_match !== undefined) {
+            if (wild_match !== undefined && value_filter(wild_match.value)) {
                 ret.push({ rule: wild_match, context_matches: [...context_matches, wildcard] });
             }
         } else {
             for (const [key, rule] of branch.entries()) {
-                ret.push({
-                    rule: rule as RuleLeaf,
-                    context_matches: [...context_matches, key == '*' ? presume_wildcard : key],
-                });
+                if (value_filter((rule as RuleLeaf).value)) {
+                    ret.push({
+                        rule: rule as RuleLeaf,
+                        context_matches: [...context_matches, key == '*' ? presume_wildcard : key],
+                    });
+                }
             }
         }
     } else {
@@ -288,25 +291,37 @@ function _potential_rules(
             const direct_match = branch.get(filter) as RuleBranch | undefined;
             if (direct_match !== undefined) {
                 ret = ret.concat(
-                    _potential_rules(direct_match, context_features, context_filters, [
-                        ...context_matches,
-                        exact_match,
-                    ]),
+                    _potential_rules(
+                        direct_match,
+                        context_features,
+                        context_filters,
+                        [...context_matches, exact_match],
+                        value_filter,
+                    ),
                 );
             }
             const wild_match = branch.get('*') as RuleBranch | undefined;
             if (wild_match !== undefined) {
                 ret = ret.concat(
-                    _potential_rules(wild_match, context_features, context_filters, [...context_matches, wildcard]),
+                    _potential_rules(
+                        wild_match,
+                        context_features,
+                        context_filters,
+                        [...context_matches, wildcard],
+                        value_filter,
+                    ),
                 );
             }
         } else {
             for (const [key, child] of branch.entries()) {
                 ret = ret.concat(
-                    _potential_rules(child as RuleBranch, context_features, context_filters, [
-                        ...context_matches,
-                        key == '*' ? presume_wildcard : key,
-                    ]),
+                    _potential_rules(
+                        child as RuleBranch,
+                        context_features,
+                        context_filters,
+                        [...context_matches, key == '*' ? presume_wildcard : key],
+                        value_filter,
+                    ),
                 );
             }
         }
@@ -318,8 +333,9 @@ export function getPotentialRules(
     branch: RuleBranch,
     configurable_features: string[],
     context_filters: Map<string, string>,
+    value_filter: (value: any) => any,
 ): PotentialRule[] {
-    const results = _potential_rules(branch, configurable_features, context_filters, []);
+    const results = _potential_rules(branch, configurable_features, context_filters, [], value_filter);
     const blacklisted_indices = new Set<number>(); // the indices of rules that are superseded
     const ret: PotentialRule[] = [];
     for (let i = 0; i < results.length; i++) {

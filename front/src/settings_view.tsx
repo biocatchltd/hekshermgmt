@@ -133,7 +133,7 @@ export function SettingsView(props: SettingsViewProps) {
         );
     }
     const applicable_rules = settings.map((s) =>
-        getPotentialRules(ruleSet!.rules_per_setting.get(s.name)!, s.configurableFeatures, contextFilters),
+        getPotentialRules(ruleSet!.rules_per_setting.get(s.name)!, s.configurableFeatures, contextFilters, () => true),
     );
     const data = settings.map((setting, i) => setting.to_row(contextFeatures!, applicable_rules[i]));
     const columns: MUIDataTableColumn[] = [

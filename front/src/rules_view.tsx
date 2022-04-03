@@ -11,7 +11,22 @@ import {
     RuleLeaf,
 } from './potential_rules';
 import * as React from 'react';
-import { Card, Stack, Typography, Collapse, Link, Fab, CardActions, CardContent, IconButton } from '@mui/material';
+import {
+    Card,
+    Stack,
+    Typography,
+    Collapse,
+    Link,
+    Fab,
+    CardActions,
+    CardContent,
+    IconButton,
+    AccordionSummary,
+    Accordion,
+    AccordionDetails,
+    TextField,
+    Tooltip,
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { TruncChip } from './trunc_string';
 import { ContextSelect } from './context_select';
@@ -111,7 +126,7 @@ export function RulesView(props: RulesViewProps) {
         element: JSX.Element;
     } | null>(null);
     /**
-    this is always either an empty object or null
+     this is always either an empty object or null
      */
     const [valueEditDialogNewProps, setValueEditDialogNewProps] = useState<Record<string, never> | null>(null);
     const [valueEditDialogExistingProps, setValueEditDialogExistingProps] = useState<{
@@ -132,13 +147,35 @@ export function RulesView(props: RulesViewProps) {
         callback: () => void;
     } | null>(null);
 
+    const [valueFilter, setValueFilter] = useState<string>('');
+
     useEffect(() => {
         setPartialContext(props.initialContextFilter ?? new Map<string, string>());
     }, [props.initialContextFilter]);
 
+    const valueFilterFunction = useMemo<[(value: any) => any, string | null]>(() => {
+        if (valueFilter === '') {
+            return [() => true, null];
+        }
+        try {
+            return [
+                Function(
+                    'value',
+                    `"use strict";` +
+                        `try{return ${valueFilter}}` +
+                        `catch(e){console.warn("error when evaluating value filter", e); return true}`,
+                ) as (value: any) => any,
+                null,
+            ];
+        } catch (e) {
+            return [() => true, e.message];
+        }
+    }, [valueFilter]);
+
     const applicableRules = useMemo(
-        () => getPotentialRules(props.rules, props.setting.configurableFeatures, partialContext),
-        [partialContext, props.setting, props.rules],
+        () =>
+            getPotentialRules(props.rules, props.setting.configurableFeatures, partialContext, valueFilterFunction[0]),
+        [partialContext, props.setting, props.rules, valueFilterFunction],
     );
 
     const handleEditClick = (rule: PotentialRule) => () => {
@@ -227,6 +264,22 @@ export function RulesView(props: RulesViewProps) {
                         }}
                         initialValue={partialContext}
                     />
+                    <Accordion sx={{ my: 1 }}>
+                        <AccordionSummary>
+                            <Typography>Value Filter {}</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Tooltip title='Enter here a javascript expression with the variable "value"'>
+                                <TextField
+                                    fullWidth
+                                    label='Value Filter'
+                                    error={valueFilterFunction[1] !== null}
+                                    helperText={valueFilterFunction[1]}
+                                    onChange={(event) => setValueFilter(event.target.value)}
+                                />
+                            </Tooltip>
+                        </AccordionDetails>
+                    </Accordion>
                 </Card>
                 <TransitionGroup>
                     {applicableRules.map((rule) => (
