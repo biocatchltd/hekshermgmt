@@ -28,6 +28,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
+import useDeepEffect from '@lucarestagno/use-deep-effect';
 
 export interface SettingType<T> {
     /**
@@ -49,6 +50,11 @@ export interface SettingType<T> {
      * convert a value of the type to a JSX element for viewing
      */
     asViewElement(value: T): JSX.Element;
+
+    /**
+     * Check whether a parsed JSON is a valid member of this type
+     */
+    isValid(value: any): boolean;
 
     /**
      * convert a value of the type to a JSX element for editing
@@ -98,6 +104,10 @@ class StrSettingType implements SettingType<string> {
     defaultValue(): string {
         return '';
     }
+
+    isValid(value: any): boolean {
+        return typeof value === 'string';
+    }
 }
 
 class IntSettingType implements SettingType<number> {
@@ -140,6 +150,10 @@ class IntSettingType implements SettingType<number> {
     defaultValue(): number {
         return 0;
     }
+
+    isValid(value: any): boolean {
+        return typeof value === 'number' && value % 1 === 0;
+    }
 }
 
 class BoolSettingType implements SettingType<boolean> {
@@ -169,6 +183,10 @@ class BoolSettingType implements SettingType<boolean> {
 
     defaultValue(): boolean {
         return false;
+    }
+
+    isValid(value: any): boolean {
+        return typeof value === 'boolean';
     }
 }
 
@@ -211,6 +229,10 @@ class FloatSettingType implements SettingType<number> {
 
     defaultValue(): number {
         return 0;
+    }
+
+    isValid(value: any): boolean {
+        return typeof value === 'number' && !isNaN(value);
     }
 }
 
@@ -267,6 +289,11 @@ class EnumSettingType implements SettingType<number | boolean | string> {
 
     defaultValue(): number | boolean | string {
         return this.values[0];
+    }
+
+    isValid(value: any): boolean {
+        // @ts-ignore
+        return this.values.indexOf(value) !== -1;
     }
 }
 
@@ -365,6 +392,10 @@ class FlagsSettingType implements SettingType<(number | boolean | string)[]> {
     defaultValue(): (number | boolean | string)[] {
         return [];
     }
+
+    isValid(value: any): boolean {
+        return Array.isArray(value) && value.every((v) => this.values.includes(v));
+    }
 }
 
 type SequenceViewProps = {
@@ -373,7 +404,9 @@ type SequenceViewProps = {
 };
 
 function SequenceView(props: SequenceViewProps) {
-    const [dialogTarget, setDialogTarget] = useState<{ index: number; element: JSX.Element } | null>(null);
+    const [dialogTarget, setDialogTarget] = useState<{ index: number; element: JSX.Element; export: string } | null>(
+        null,
+    );
 
     return (
         <>
@@ -383,7 +416,11 @@ function SequenceView(props: SequenceViewProps) {
                         <ListItem key={i.toString()}>
                             <ListItemButton
                                 onClick={() =>
-                                    setDialogTarget({ element: props.elementType.asViewElement(v), index: i })
+                                    setDialogTarget({
+                                        element: props.elementType.asViewElement(v),
+                                        index: i,
+                                        export: JSON.stringify(v),
+                                    })
                                 }
                             >
                                 <ListItemText primary={props.elementType.Format(v)} />
@@ -396,6 +433,7 @@ function SequenceView(props: SequenceViewProps) {
                 open={dialogTarget !== null}
                 onClose={() => setDialogTarget(null)}
                 title={`index # ${dialogTarget?.index}`}
+                export={dialogTarget?.export ?? ''}
             >
                 {dialogTarget?.element}
             </ValueViewDialog>
@@ -415,7 +453,11 @@ function BaseSequenceEdit(props: BaseSequenceEditProps) {
     // each item is a tuple of a value, const key, and error
     const [items, setItems] = useState(props.initialValue.map((v) => [v, uuid(), '']));
 
-    useEffect(() => {
+    useDeepEffect(() => {
+        setItems(props.initialValue.map((v) => [v, uuid(), '']));
+    }, [props.initialValue]);
+
+    useDeepEffect(() => {
         props.onChange(items.map((v) => v[0]));
         let error = '';
         for (const idx in items) {
@@ -648,6 +690,10 @@ class SequenceSettingType<E> implements SettingType<E[]> {
     defaultValue(): E[] {
         return [];
     }
+
+    isValid(value: any): boolean {
+        return Array.isArray(value) && value.every((v: any) => this.elementType.isValid(v));
+    }
 }
 
 type MappingViewProps = {
@@ -656,7 +702,9 @@ type MappingViewProps = {
 };
 
 function MappingView(props: MappingViewProps) {
-    const [dialogTarget, setDialogTarget] = useState<{ key: string; element: JSX.Element } | null>(null);
+    const [dialogTarget, setDialogTarget] = useState<{ key: string; element: JSX.Element; export: string } | null>(
+        null,
+    );
 
     return (
         <>
@@ -666,7 +714,13 @@ function MappingView(props: MappingViewProps) {
                         <ListItem key={i.toString()}>
                             <ListItemText primary={k + ': '} />
                             <ListItemButton
-                                onClick={() => setDialogTarget({ element: props.valueType.asViewElement(v), key: k })}
+                                onClick={() =>
+                                    setDialogTarget({
+                                        element: props.valueType.asViewElement(v),
+                                        key: k,
+                                        export: JSON.stringify(v),
+                                    })
+                                }
                             >
                                 <ListItemText primary={props.valueType.Format(v)} />
                             </ListItemButton>
@@ -678,6 +732,7 @@ function MappingView(props: MappingViewProps) {
                 open={dialogTarget !== null}
                 onClose={() => setDialogTarget(null)}
                 title={`key "${dialogTarget?.key}"`}
+                export={dialogTarget?.export ?? ''}
             >
                 {dialogTarget?.element}
             </ValueViewDialog>
@@ -694,17 +749,22 @@ type BaseMappingEditProps = {
 };
 
 function BaseMappingEdit(props: BaseMappingEditProps) {
-    // each entry value is a 3-tuple of a value a const key, and the error
-    const [entries, setEntries] = useState<[string, [any, string, string]][]>(() => {
-        const ret = Object.entries(props.initialValue).map(([k, v]) => [k, [v, uuid(), '']]) as [
-            string,
-            [any, string, string],
-        ][];
+    function convert_initial_value(value: Record<string, any>): [string, [any, string, string]][] {
+        const ret = Object.entries(value).map(([k, v]) => [k, [v, uuid(), '']]) as [string, [any, string, string]][];
         ret.sort();
         return ret;
-    });
+    }
 
-    useEffect(() => {
+    // each entry value is a 3-tuple of a value a const key, and the error
+    const [entries, setEntries] = useState<[string, [any, string, string]][]>(() =>
+        convert_initial_value(props.initialValue),
+    );
+
+    useDeepEffect(() => {
+        setEntries(convert_initial_value(props.initialValue));
+    }, [props.initialValue]);
+
+    useDeepEffect(() => {
         props.onChange(Object.fromEntries(entries.map(([k, v]) => [k, v[0]])));
         // we can assume that that keys are sorted
         let previous_key: string | null = null;
@@ -921,6 +981,15 @@ class MapSettingType<V> implements SettingType<Record<string, V>> {
 
     defaultValue(): Record<string, V> {
         return {};
+    }
+
+    isValid(value: Record<string, V>): boolean {
+        return (
+            typeof value === 'object' &&
+            !Array.isArray(value) &&
+            value !== null &&
+            Object.entries(value).every(([, v]) => this.valueType.isValid(v))
+        );
     }
 }
 

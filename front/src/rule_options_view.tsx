@@ -32,6 +32,7 @@ export function RuleOptionsView(props: RuleOptionsViewProps) {
                 open={dialogTarget !== null}
                 onClose={() => setDialogTarget(null)}
                 title={dialogTarget?.get_assumptions_string() ?? ''}
+                export={JSON.stringify(dialogTarget?.rule.value)}
             >
                 {dialogTarget !== null ? props.type.asViewElement(dialogTarget.rule.value) : null}
             </ValueViewDialog>

@@ -7,6 +7,7 @@ type ConfirmDialogProps = {
     children: ReactNode;
     handleConfirm: () => void;
     handleClose: () => void;
+    allowConfirm?: boolean;
 };
 
 /**
@@ -25,6 +26,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
                         props.handleConfirm();
                     }}
                     autoFocus
+                    disabled={!(props.allowConfirm ?? true)}
                 >
                     OK
                 </Button>

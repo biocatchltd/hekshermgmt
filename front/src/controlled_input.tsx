@@ -21,6 +21,7 @@ import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
 import { useEffect, useState } from 'react';
 import { primitive_to_str } from './setting_type';
 import * as React from 'react';
+import useDeepEffect from '@lucarestagno/use-deep-effect';
 
 type ControlledTextFieldProps = {
     initialValue: string;
@@ -33,6 +34,10 @@ type ControlledTextFieldProps = {
 export function ControlledTextField(props: ControlledTextFieldProps) {
     const [value, setValue] = useState<string>(props.initialValue);
     const [errorText, setErrorText] = useState('');
+
+    useEffect(() => {
+        setValue(props.initialValue);
+    }, [props.initialValue]);
 
     if (props.errorMsg !== undefined) {
         useEffect(() => {
@@ -69,10 +74,14 @@ type ControlledSwitchProps = {
 export function ControlledSwitch(props: ControlledSwitchProps) {
     const [value, setValue] = useState<boolean>(props.initialValue);
 
+    useEffect(() => {
+        setValue(props.initialValue);
+    }, [props.initialValue]);
+
     return (
         <Switch
             {...props.switchProps}
-            value={value}
+            checked={value}
             onChange={(e, b) => {
                 props.onChange(b);
                 setValue(b);
@@ -90,6 +99,10 @@ type ControlledRadioGroupProps = {
 
 export function ControlledRadioGroup(props: ControlledRadioGroupProps) {
     const [value, setValue] = useState(props.initialValue);
+
+    useEffect(() => {
+        setValue(props.initialValue);
+    }, [props.initialValue]);
 
     return (
         <RadioGroup
@@ -115,6 +128,11 @@ type ControlledTransferListProps = {
 export function ControlledTransferList(props: ControlledTransferListProps) {
     const [included, setIncluded] = useState(props.initialIncluded);
     const [excluded, setExcluded] = useState(props.initialExcluded);
+
+    useDeepEffect(() => {
+        setIncluded(props.initialIncluded);
+        setExcluded(props.initialExcluded);
+    }, [props.initialIncluded, props.initialExcluded]);
 
     const transfer = (value: number) => () => {
         const newIncluded = new Set(included);

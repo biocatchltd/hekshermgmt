@@ -45,7 +45,11 @@ export function SettingsView(props: SettingsViewProps) {
         return newRulePanelRules;
     }, [ruleSet, rulesPanelSetting]);
 
-    const [valueViewProps, setValueViewProps] = useState<{ title: string; element: JSX.Element } | null>(null);
+    const [valueViewProps, setValueViewProps] = useState<{
+        title: string;
+        element: JSX.Element;
+        export: string;
+    } | null>(null);
 
     let base_url;
     let base_headers = {};
@@ -181,6 +185,7 @@ export function SettingsView(props: SettingsViewProps) {
                                     setValueViewProps({
                                         title: `${setting.name} default value`,
                                         element: setting.type.asViewElement(setting.default_value),
+                                        export: JSON.stringify(setting.default_value),
                                     }),
                             }}
                         />
@@ -211,6 +216,16 @@ export function SettingsView(props: SettingsViewProps) {
                                         setValueViewProps({
                                             title: `${rules.length} Options for ${setting.name}:`,
                                             element: <RuleOptionsView options={rules} type={setting.type} />,
+                                            export: JSON.stringify(
+                                                rules.map((r) => {
+                                                    return {
+                                                        id: r.rule.rule_id,
+                                                        value: r.rule.value,
+                                                        context_features: Object.fromEntries(r.rule.context_features),
+                                                        metadata: Object.fromEntries(r.rule.metadata),
+                                                    };
+                                                }),
+                                            ),
                                         }),
                                 }}
                             />
@@ -236,6 +251,7 @@ export function SettingsView(props: SettingsViewProps) {
                                         setValueViewProps({
                                             title: viewTitle,
                                             element: setting.type.asViewElement(value),
+                                            export: JSON.stringify(value),
                                         }),
                                     ...sx,
                                 }}
@@ -370,6 +386,7 @@ export function SettingsView(props: SettingsViewProps) {
                 open={valueViewProps !== null}
                 onClose={() => setValueViewProps(null)}
                 title={valueViewProps !== null ? valueViewProps.title : ''}
+                export={valueViewProps !== null ? valueViewProps.export : ''}
             >
                 {valueViewProps !== null && valueViewProps.element}
             </ValueViewDialog>

@@ -124,6 +124,7 @@ export function RulesView(props: RulesViewProps) {
     const [valueViewDialogProps, setValueViewDialogProps] = useState<{
         title: string;
         element: JSX.Element;
+        export: string;
     } | null>(null);
     /**
      this is always either an empty object or null
@@ -295,6 +296,7 @@ export function RulesView(props: RulesViewProps) {
                                         title:
                                             rule.rule.rule_id === -1 ? 'Default Value' : `Rule #${rule.rule.rule_id}`,
                                         element: props.setting.type.asViewElement(rule.rule.value),
+                                        export: JSON.stringify(rule.rule.value),
                                     })
                                 }
                                 isDefault={rule.rule.rule_id === -1}
@@ -309,6 +311,7 @@ export function RulesView(props: RulesViewProps) {
                 open={valueViewDialogProps !== null}
                 onClose={() => setValueViewDialogProps(null)}
                 title={valueViewDialogProps?.title ?? ''}
+                export={valueViewDialogProps?.export ?? ''}
             >
                 {valueViewDialogProps !== null ? valueViewDialogProps?.element : null}
             </ValueViewDialog>
@@ -384,6 +387,7 @@ export function RulesView(props: RulesViewProps) {
                     existingRuleBranch={props.rules}
                     contextFeatures={props.setting.configurableFeatures}
                     onInfoChange={(s) => setValueEditDialogInfo(s)}
+                    isValidValue={(v) => props.setting.type.isValid(v)}
                 />
             )}
             {valueEditDialogExistingProps !== null && (
