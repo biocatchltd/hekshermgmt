@@ -619,6 +619,7 @@ function LongSequenceEdit(props: SequenceEditProps) {
                     on_value_changed={dialogProps!.v_cb}
                     on_validity_changed={dialogProps!.err_cb}
                     children_factory={dialogProps!.children_factory}
+                    isValidValue={(v) => props.elementType.isValid(v)}
                 />
             )}
         </>
@@ -914,6 +915,7 @@ function LongMappingEdit(props: MappingEditProps) {
                     on_value_changed={dialogProps!.v_cb}
                     on_validity_changed={dialogProps!.err_cb}
                     children_factory={dialogProps!.children_factory}
+                    isValidValue={(v) => props.valueType.isValid(v)}
                 />
             )}
         </>

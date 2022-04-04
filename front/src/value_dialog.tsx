@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import {
     Alert,
     Button,
@@ -11,6 +11,7 @@ import {
     TextField,
     IconButton,
     Tooltip,
+    Typography,
 } from '@mui/material';
 import Draggable from 'react-draggable';
 import * as React from 'react';
@@ -83,6 +84,7 @@ type ValueEditDialogNoContextProps = {
         on_change_validity: (err: string) => void,
     ) => ReactNode;
     title: string;
+    isValidValue: (value: any) => boolean;
 };
 
 type ValueEditDialogConstContextProps = {
@@ -101,6 +103,7 @@ type ValueEditDialogConstContextProps = {
     initialContext: Map<string, string>;
     existingRuleBranch: RuleBranch;
     contextFeatures: string[];
+    isValidValue: (value: any) => boolean;
 };
 
 type ValueEditDialogNewContextProps = {
@@ -131,12 +134,28 @@ we have three different dialogs here:
 3. no context, for specific elements of values
  */
 
-// todo common supercomp?
-export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps) {
+type BaseValueEditDialogProps = {
+    open: boolean;
+    onClose: (ok: boolean) => void;
+    initial_value: any;
+    on_value_changed: (new_value: any) => void;
+    on_value_validity_changed: (new_err: string) => void;
+    children_factory: (
+        value: any,
+        on_change_value: (new_value: any) => void,
+        on_change_validity: (err: string) => void,
+    ) => ReactNode;
+    title: string;
+    isValidValue: (value: any) => boolean;
+    context_children: JSX.Element | null;
+    info_area: JSX.Element | null;
+
+    contextError: string;
+};
+
+function BaseValueEditDialog(props: BaseValueEditDialogProps) {
     const [valueError, setValueError] = useState('');
     const [value, setValue] = useState(props.initial_value);
-    const [contextError, setContextError] = useState('');
-    const [context, setContext] = useState(props.initialContext);
 
     const [importValue, setImportValue] = useState<any>(null);
     const [importError, setImportError] = useState('enter a json string to import');
@@ -148,6 +167,90 @@ export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps)
         navigator.clipboard.writeText(JSON.stringify(value));
         enqueueSnackbar('Copied to clipboard', { variant: 'info' });
     };
+
+    useEffect(() => {
+        props.on_value_changed(value);
+    }, [value]);
+
+    useEffect(() => {
+        props.on_value_validity_changed(valueError);
+    }, [valueError]);
+
+    return (
+        <Dialog
+            open={props.open}
+            PaperComponent={PaperComponent}
+            aria-labelledby='draggable-dialog-title'
+            transitionDuration={{ exit: 0 }}
+        >
+            <DialogTitle style={{ cursor: 'move' }} id='draggable-dialog-title'>
+                {props.title}
+            </DialogTitle>
+            {props.context_children}
+            <DialogContent>
+                {valueError && <Alert severity='error'>{valueError}</Alert>}
+                <div>
+                    {props.children_factory(
+                        value,
+                        (v) => setValue(v),
+                        (e) => setValueError(e),
+                    )}
+                </div>
+                {props.info_area}
+            </DialogContent>
+            <DialogActions>
+                <Tooltip title='import raw value'>
+                    <IconButton onClick={() => setImportOpen(true)} color='primary'>
+                        <TextSnippetIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title='copy raw value'>
+                    <IconButton onClick={copyContent} color='primary' disabled={valueError !== ''}>
+                        <ContentCopyIcon />
+                    </IconButton>
+                </Tooltip>
+                <Button onClick={() => props.onClose(true)} disabled={valueError !== '' || props.contextError !== ''}>
+                    OK
+                </Button>
+                <Button onClick={() => props.onClose(false)}>Cancel</Button>
+            </DialogActions>
+            {importOpen && (
+                <ConfirmDialog
+                    title='import raw value'
+                    handleClose={() => setImportOpen(false)}
+                    handleConfirm={() => setValue(importValue)}
+                    allowConfirm={importError === ''}
+                >
+                    <TextField
+                        onChange={(event) => {
+                            let imported_value;
+                            try {
+                                imported_value = JSON.parse(event.target.value);
+                            } catch (e) {
+                                setImportError(e.message);
+                                return;
+                            }
+                            if (!props.isValidValue(imported_value)) {
+                                setImportError('invalid value');
+                                return;
+                            }
+                            setImportError('');
+                            setImportValue(imported_value);
+                        }}
+                        multiline
+                        error={importError !== ''}
+                        helperText={importError}
+                    />
+                </ConfirmDialog>
+            )}
+        </Dialog>
+    );
+}
+
+export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps) {
+    const [contextError, setContextError] = useState('');
+    const [context, setContext] = useState(props.initialContext);
+    const [valueError, setValueError] = useState('');
 
     // all contexts that are "undefined" in the partial context should default to *
     const initial_context = new Map(
@@ -187,106 +290,44 @@ export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps)
     };
 
     useEffect(() => {
-        props.on_value_changed(value);
-    }, [value]);
-
-    useEffect(() => {
         props.on_validity_changed(valueError || contextError);
     }, [valueError, contextError]);
 
     return (
-        <Dialog
+        <BaseValueEditDialog
             open={props.open}
-            PaperComponent={PaperComponent}
-            aria-labelledby='draggable-dialog-title'
-            transitionDuration={{ exit: 0 }}
-        >
-            <DialogTitle style={{ cursor: 'move' }} id='draggable-dialog-title'>
-                {props.title}
-            </DialogTitle>
-            {contextError && <Alert severity='error'>{contextError}</Alert>}
-            {valueError && <Alert severity='error'>{valueError}</Alert>}
-            <div style={{ justifyContent: 'center', width: '100%' }}>
-                <ContextSelect
-                    context_options={props.contextOptions!}
-                    filterChangeCallback={changeContext}
-                    initialValue={initial_context}
-                    isConcrete={true}
-                    stackProps={{ spacing: 1, alignItems: 'center' }}
-                />
-            </div>
-            <DialogContent>
-                <div>
-                    {props.children_factory(
-                        value,
-                        (v) => setValue(v),
-                        (e) => setValueError(e),
-                    )}
-                </div>
+            onClose={props.onClose}
+            initial_value={props.initial_value}
+            on_value_changed={props.on_value_changed}
+            on_value_validity_changed={(e) => setValueError(e)}
+            children_factory={props.children_factory}
+            title={props.title}
+            isValidValue={props.isValidValue}
+            context_children={
+                <>
+                    {contextError && <Alert severity='error'>{contextError}</Alert>}
+                    <div style={{ justifyContent: 'center', width: '100%' }}>
+                        <ContextSelect
+                            context_options={props.contextOptions!}
+                            filterChangeCallback={changeContext}
+                            initialValue={initial_context}
+                            isConcrete={true}
+                            stackProps={{ spacing: 1, alignItems: 'center' }}
+                        />
+                    </div>
+                </>
+            }
+            info_area={
                 <TextField onChange={(e) => props.onInfoChange(e.target.value)} sx={{ py: 1 }} label='Info' fullWidth />
-            </DialogContent>
-            <DialogActions>
-                <Tooltip title='import raw value'>
-                    <IconButton onClick={() => setImportOpen(true)} color='primary'>
-                        <TextSnippetIcon />
-                    </IconButton>
-                </Tooltip>
-                <Tooltip title='copy raw value'>
-                    <IconButton onClick={copyContent} color='primary' disabled={valueError !== ''}>
-                        <ContentCopyIcon />
-                    </IconButton>
-                </Tooltip>
-                <Button onClick={() => props.onClose(true)} disabled={valueError !== '' || contextError !== ''}>
-                    OK
-                </Button>
-                <Button onClick={() => props.onClose(false)}>Cancel</Button>
-            </DialogActions>
-            {importOpen && (
-                <ConfirmDialog
-                    title='import raw value'
-                    handleClose={() => setImportOpen(false)}
-                    handleConfirm={() => setValue(importValue)}
-                    allowConfirm={importError === ''}
-                >
-                    <TextField
-                        onChange={(event) => {
-                            let imported_value;
-                            try {
-                                imported_value = JSON.parse(event.target.value);
-                            } catch (e) {
-                                setImportError(e.message);
-                                return;
-                            }
-                            if (!props.isValidValue(imported_value)) {
-                                setImportError('invalid value');
-                                return;
-                            }
-                            setImportError('');
-                            setImportValue(imported_value);
-                        }}
-                        multiline
-                        error={importError !== ''}
-                        helperText={importError}
-                    />
-                </ConfirmDialog>
-            )}
-        </Dialog>
+            }
+            contextError={contextError}
+        />
     );
 }
 
 export function ValueEditDialogConstContext(props: ValueEditDialogConstContextProps) {
-    const [valueError, setValueError] = useState('');
-    const [value, setValue] = useState(props.initial_value);
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    const copyContent = () => {
-        navigator.clipboard.writeText(JSON.stringify(value));
-        enqueueSnackbar('Copied to clipboard', { variant: 'info' });
-    };
-
     // all contexts that are "undefined" in the partial context should default to *
-    const initial_context = new Map(
+    const context = new Map(
         Array.from(props.contextFeatures).map((k) => {
             let v = props.initialContext!.get(k);
             if (v === undefined || v === '<none>') {
@@ -296,104 +337,43 @@ export function ValueEditDialogConstContext(props: ValueEditDialogConstContextPr
         }),
     );
 
-    useEffect(() => {
-        props.on_value_changed(value);
-    }, [value]);
-
-    useEffect(() => {
-        props.on_validity_changed(valueError);
-    }, [valueError]);
-
     return (
-        <Dialog
+        <BaseValueEditDialog
             open={props.open}
-            PaperComponent={PaperComponent}
-            aria-labelledby='draggable-dialog-title'
-            transitionDuration={{ exit: 0 }}
-        >
-            <DialogTitle style={{ cursor: 'move' }} id='draggable-dialog-title'>
-                {props.title}
-                <div style={{ fontStyle: 'small' }}>
-                    {Array.from(initial_context.entries())
+            onClose={props.onClose}
+            initial_value={props.initial_value}
+            on_value_changed={props.on_value_changed}
+            on_value_validity_changed={props.on_validity_changed}
+            children_factory={props.children_factory}
+            title={props.title}
+            isValidValue={props.isValidValue}
+            context_children={
+                <Typography sx={{ ml: 3 }}>
+                    {Array.from(context.entries())
                         .map(([k, v]) => `${k}: ${v}`)
                         .join(', ')}
-                </div>
-            </DialogTitle>
-            {valueError && <Alert severity='error'>{valueError}</Alert>}
-            <DialogContent>
-                <div>
-                    {props.children_factory(
-                        value,
-                        (v) => setValue(v),
-                        (e) => setValueError(e),
-                    )}
-                </div>
-            </DialogContent>
-            <DialogActions>
-                <Tooltip title='copy raw value'>
-                    <IconButton onClick={copyContent} color='primary' disabled={valueError !== ''}>
-                        <ContentCopyIcon />
-                    </IconButton>
-                </Tooltip>
-                <Button onClick={() => props.onClose(true)} disabled={valueError !== ''}>
-                    OK
-                </Button>
-                <Button onClick={() => props.onClose(false)}>Cancel</Button>
-            </DialogActions>
-        </Dialog>
+                </Typography>
+            }
+            info_area={null}
+            contextError={''}
+        />
     );
 }
 
 export function ValueEditDialogNoContext(props: ValueEditDialogNoContextProps) {
-    const [valueError, setValueError] = useState('');
-    const [value, setValue] = useState(props.initial_value);
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    const copyContent = () => {
-        navigator.clipboard.writeText(JSON.stringify(value));
-        enqueueSnackbar('Copied to clipboard', { variant: 'info' });
-    };
-
-    useEffect(() => {
-        props.on_value_changed(value);
-    }, [value]);
-
-    useEffect(() => {
-        props.on_validity_changed(valueError);
-    }, [valueError]);
-
     return (
-        <Dialog
+        <BaseValueEditDialog
             open={props.open}
-            PaperComponent={PaperComponent}
-            aria-labelledby='draggable-dialog-title'
-            transitionDuration={{ exit: 0 }}
-        >
-            <DialogTitle style={{ cursor: 'move' }} id='draggable-dialog-title'>
-                {props.title}
-            </DialogTitle>
-            {valueError && <Alert severity='error'>{valueError}</Alert>}
-            <DialogContent>
-                <div>
-                    {props.children_factory(
-                        value,
-                        (v) => setValue(v),
-                        (e) => setValueError(e),
-                    )}
-                </div>
-            </DialogContent>
-            <DialogActions>
-                <Tooltip title='copy raw value'>
-                    <IconButton onClick={copyContent} color='primary' disabled={valueError !== ''}>
-                        <ContentCopyIcon />
-                    </IconButton>
-                </Tooltip>
-                <Button onClick={() => props.onClose(true)} disabled={valueError !== ''}>
-                    OK
-                </Button>
-                <Button onClick={() => props.onClose(false)}>Cancel</Button>
-            </DialogActions>
-        </Dialog>
+            onClose={props.onClose}
+            initial_value={props.initial_value}
+            on_value_changed={props.on_value_changed}
+            on_value_validity_changed={props.on_validity_changed}
+            children_factory={props.children_factory}
+            title={props.title}
+            isValidValue={props.isValidValue}
+            context_children={null}
+            info_area={null}
+            contextError={''}
+        />
     );
 }

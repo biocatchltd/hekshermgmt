@@ -457,6 +457,7 @@ export function RulesView(props: RulesViewProps) {
                     initialContext={valueEditDialogExistingProps.rule_context}
                     existingRuleBranch={props.rules}
                     contextFeatures={props.setting.configurableFeatures}
+                    isValidValue={(v) => props.setting.type.isValid(v)}
                 />
             )}
             {confirmationDialogProps !== null && (

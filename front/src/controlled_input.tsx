@@ -61,6 +61,7 @@ export function ControlledTextField(props: ControlledTextFieldProps) {
             }}
             error={errorText != ''}
             helperText={errorText}
+            fullWidth
         />
     );
 }
