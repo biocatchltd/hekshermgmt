@@ -179,31 +179,35 @@ export function RulesView(props: RulesViewProps) {
         [partialContext, props.setting, props.rules, valueFilterFunction],
     );
 
-    const handleEditClick = (rule: PotentialRule) => () => {
+    const openEdit = (rule: RuleLeaf) => {
         setValueEditDialogExistingProps({
-            rule_id: rule.rule.rule_id,
-            rule_value: rule.rule.value,
-            rule_context: rule.rule.context_features,
+            rule_id: rule.rule_id,
+            rule_value: rule.value,
+            rule_context: rule.context_features,
         });
     };
 
-    const handleDeleteClick = (rule: PotentialRule) => () => {
+    const handleEditClick = (rule: RuleLeaf) => () => {
+        openEdit(rule);
+    };
+
+    const handleDeleteClick = (rule: RuleLeaf) => () => {
         setConfirmationDialogProps({
-            title: `Delete rule #${rule.rule.rule_id}?`,
+            title: `Delete rule #${rule.rule_id}?`,
             text:
-                Array.from(rule.rule.context_features)
+                Array.from(rule.context_features)
                     .map(([key, value]) => `${key}: ${value}`)
                     .join(', ') +
                 ' => ' +
-                props.setting.type.Format(rule.rule.value),
+                props.setting.type.Format(rule.value),
             callback: () => {
                 const promise = props.heksherClient
-                    .delete('/api/v1/rules/' + rule.rule.rule_id)
+                    .delete('/api/v1/rules/' + rule.rule_id)
                     .then(() => {
                         const newBranch = ruleBranchCopy(props.rules);
-                        removeRule(newBranch, rule.rule, props.setting.configurableFeatures);
+                        removeRule(newBranch, rule, props.setting.configurableFeatures);
                         props.onRuleChange(newBranch);
-                        enqueueSnackbar(`Rule ${rule.rule.rule_id} deleted`, { variant: 'success' });
+                        enqueueSnackbar(`Rule ${rule.rule_id} deleted`, { variant: 'success' });
                     })
                     .catch((err) => {
                         if (err.response) {
@@ -300,8 +304,8 @@ export function RulesView(props: RulesViewProps) {
                                     })
                                 }
                                 isDefault={rule.rule.rule_id === -1}
-                                onEditClick={handleEditClick(rule)}
-                                onDeleteClick={handleDeleteClick(rule)}
+                                onEditClick={handleEditClick(rule.rule)}
+                                onDeleteClick={handleDeleteClick(rule.rule)}
                             />
                         </Collapse>
                     ))}
@@ -388,6 +392,7 @@ export function RulesView(props: RulesViewProps) {
                     contextFeatures={props.setting.configurableFeatures}
                     onInfoChange={(s) => setValueEditDialogInfo(s)}
                     isValidValue={(v) => props.setting.type.isValid(v)}
+                    onTriggerChange={(r) => openEdit(r)}
                 />
             )}
             {valueEditDialogExistingProps !== null && (

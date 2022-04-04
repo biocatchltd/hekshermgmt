@@ -16,7 +16,7 @@ import {
 import Draggable from 'react-draggable';
 import * as React from 'react';
 import { ContextSelect } from './context_select';
-import { getRule, RuleBranch } from './potential_rules';
+import { getRule, RuleBranch, RuleLeaf } from './potential_rules';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { useSnackbar } from 'notistack';
@@ -125,6 +125,7 @@ type ValueEditDialogNewContextProps = {
     contextFeatures: string[];
     onInfoChange: (info: string) => void;
     isValidValue: (value: any) => boolean;
+    onTriggerChange: (rule: RuleLeaf) => void;
 };
 
 /*
@@ -249,6 +250,7 @@ function BaseValueEditDialog(props: BaseValueEditDialogProps) {
 
 export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps) {
     const [contextError, setContextError] = useState('');
+    const [existingRuleInError, setExistingRuleInError] = useState<RuleLeaf | null>(null);
     const [context, setContext] = useState(props.initialContext);
     const [valueError, setValueError] = useState('');
 
@@ -264,6 +266,7 @@ export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps)
     );
     useEffect(() => {
         const user_context = new Map(Array.from(context.entries()).filter(([, v]) => v !== '*'));
+        setExistingRuleInError(null);
         props.onContextChanged!(user_context);
         for (const [k, v] of context.entries()) {
             if (v === '') {
@@ -271,13 +274,14 @@ export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps)
                 return;
             }
         }
-        const existingRule = getRule(props.existingRuleBranch!, context, props.contextFeatures!);
+        const existingRule = getRule(props.existingRuleBranch, context, props.contextFeatures);
         if (existingRule !== null) {
             if (existingRule.rule_id === -1) {
                 // default rule
                 setContextError('Rule must have at least one condition');
             } else {
                 setContextError(`Rule already exists with ID ${existingRule.rule_id}`);
+                setExistingRuleInError(existingRule);
             }
         } else {
             setContextError('');
@@ -305,7 +309,21 @@ export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps)
             isValidValue={props.isValidValue}
             context_children={
                 <>
-                    {contextError && <Alert severity='error'>{contextError}</Alert>}
+                    {contextError && (
+                        <Alert severity='error'>
+                            {contextError}
+                            {existingRuleInError !== null && (
+                                <Button
+                                    onClick={() => {
+                                        props.onClose(false);
+                                        props.onTriggerChange(existingRuleInError);
+                                    }}
+                                >
+                                    Edit rule
+                                </Button>
+                            )}
+                        </Alert>
+                    )}
                     <div style={{ justifyContent: 'center', width: '100%' }}>
                         <ContextSelect
                             context_options={props.contextOptions!}
