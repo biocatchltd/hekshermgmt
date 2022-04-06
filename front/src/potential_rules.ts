@@ -101,19 +101,33 @@ export class RuleLeaf {
     rule_id: number;
     metadata: Map<string, any>;
 
-    constructor(model: ModelRule);
-    constructor(model: ModelGetRule, id: number);
-    constructor(model: any, id?: number) {
-        this.value = model.value;
-        this.metadata = new Map(Object.entries(model.metadata));
+    constructor(value: any, context_features: Map<string, string>, rule_id: number, metadata: Map<string, any>) {
+        this.value = value;
+        this.context_features = context_features;
+        this.rule_id = rule_id;
+        this.metadata = metadata;
+    }
 
+    static fromModel(model: ModelRule): RuleLeaf;
+    static fromModel(model: ModelGetRule, id: number): RuleLeaf;
+    static fromModel(model: any, id?: number): RuleLeaf {
+        const value = model.value;
+        const metadata = new Map(Object.entries(model.metadata));
+
+        let rule_id;
+        let context_features: Map<string, string>;
         if (id === undefined) {
-            this.rule_id = model.rule_id;
-            this.context_features = new Map(model.context_features);
+            rule_id = model.rule_id;
+            context_features = new Map(model.context_features);
         } else {
-            this.rule_id = id;
-            this.context_features = new Map(model.feature_values);
+            rule_id = id;
+            context_features = new Map(model.feature_values);
         }
+        return new RuleLeaf(value, context_features, rule_id, metadata);
+    }
+
+    static defaultRule(value: any): RuleLeaf {
+        return new RuleLeaf(value, new Map(), -1, new Map());
     }
 }
 
@@ -187,6 +201,9 @@ export function getRules(rules: RuleBranch): RuleLeaf[] {
     return ret;
 }
 
+/**
+ * get a rule with the exact-match conditions of the context.
+ */
 export function getRule(rules: RuleBranch, context: Map<string, string>, features: string[]): RuleLeaf | null {
     let current: any = rules;
     for (const feature of features) {

@@ -51,15 +51,8 @@ export class RuleSet {
         for (const setting_name in model.settings) {
             const setting = settings_by_name.get(setting_name)!;
             const setting_data = model.settings[setting_name];
-            const uncollated_rules: RuleLeaf[] = setting_data.rules.map((r) => new RuleLeaf(r));
-            uncollated_rules.push(
-                new RuleLeaf({
-                    value: setting_data.default_value,
-                    context_features: [],
-                    rule_id: -1,
-                    metadata: new Map(),
-                }),
-            );
+            const uncollated_rules: RuleLeaf[] = setting_data.rules.map((r) => RuleLeaf.fromModel(r));
+            uncollated_rules.push(RuleLeaf.defaultRule(setting_data.default_value));
 
             rules_per_setting.set(setting_name, ruleBranchFromRules(uncollated_rules, setting.configurableFeatures));
             for (const rule of uncollated_rules) {

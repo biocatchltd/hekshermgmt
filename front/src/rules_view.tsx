@@ -339,7 +339,7 @@ export function RulesView(props: RulesViewProps) {
                                     const getPromise = props.heksherClient
                                         .get<ModelGetRule>('/api/v1/rules' + response.headers['location'])
                                         .then((get_response) => {
-                                            const newRule = new RuleLeaf(get_response.data, rule_id);
+                                            const newRule = RuleLeaf.fromModel(get_response.data, rule_id);
                                             const newBranch = ruleBranchCopy(props.rules);
                                             AddRule(newBranch, newRule, props.setting.configurableFeatures);
                                             props.onRuleChange(newBranch);
@@ -411,7 +411,7 @@ export function RulesView(props: RulesViewProps) {
                                         const getPromise = props.heksherClient
                                             .get<ModelGetRule>('/api/v1/rules/' + ruleId)
                                             .then((response) => {
-                                                const newRule = new RuleLeaf(response.data, ruleId);
+                                                const newRule = RuleLeaf.fromModel(response.data, ruleId);
                                                 const newBranch = ruleBranchCopy(props.rules);
                                                 ReplaceRule(newBranch, newRule, props.setting.configurableFeatures);
                                                 props.onRuleChange(newBranch);

@@ -53,13 +53,13 @@ export function SettingsView(props: SettingsViewProps) {
 
     let base_url;
     let base_headers = {};
-    if (process.env.REACT_APP_HEKSHER_URL) {
-        base_url = process.env.REACT_APP_HEKSHER_URL;
+    if (process.env.REACT_APP_BACKEND_URL) {
+        base_url = process.env.REACT_APP_BACKEND_URL;
     } else if (process.env.NODE_ENV === 'development') {
         base_url = 'http://localhost:8000';
         base_headers = { 'X-Forwarded-Email': 'john.johnson@place.job' };
     } else {
-        throw 'Missing REACT_APP_HEKSHER_URL';
+        throw 'Missing REACT_APP_BACKEND_URL';
     }
 
     const heksherClient = axios.create({
