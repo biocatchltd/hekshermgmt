@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Setting } from './setting';
 import axios from 'axios';
-import { ModelGetSettings, ModelQuery, RuleSet } from './index';
+import { BannerPropsModel, ModelGetSettings, ModelQuery, RuleSet } from './index';
 import { Chip, ChipProps, CircularProgress, Fab, Grid, IconButton } from '@mui/material';
 import { getPotentialRules, RuleBranch } from './potential_rules';
 import MUIDataTable, { MUIDataTableColumn } from 'mui-datatables';
@@ -16,11 +16,13 @@ import * as React from 'react';
 import { RulesView } from './rules_view';
 import { ValueViewDialog } from './value_dialog';
 import { RuleOptionsView } from './rule_options_view';
+import { BannerProps } from './app';
 
 const SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD = 50; // in milliseconds
 
 type SettingsViewProps = {
     setProcessing: (promise: Promise<any> | null) => void;
+    setBannerProps: (props: BannerProps) => void;
 };
 
 export function SettingsView(props: SettingsViewProps) {
@@ -98,6 +100,18 @@ export function SettingsView(props: SettingsViewProps) {
             .then((resp) => {
                 promises.delete(query_promise);
                 setQueryResult(resp.data);
+            });
+        const banner_promise = heksherClient
+            .get<BannerPropsModel | null>('/backend/v1/banner', { signal: abortController.signal })
+            .then((resp) => {
+                promises.delete(banner_promise);
+                if (resp.data != null) {
+                    props.setBannerProps({
+                        text: resp.data.text,
+                        color: resp.data.color,
+                        textColor: resp.data.text_color,
+                    });
+                }
             });
         return () => {
             abortController.abort();

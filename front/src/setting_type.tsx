@@ -17,7 +17,7 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RemoveIcon from '@mui/icons-material/Remove';
 import * as React from 'react';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { ValueEditDialogNoContext, ValueViewDialog } from './value_dialog';
 import {
     ControlledRadioGroup,

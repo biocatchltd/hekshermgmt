@@ -4,7 +4,7 @@ from logging import getLogger
 from fastapi import APIRouter, Request
 
 from hekshermgmt.app import HeksherMgmtBackend, user_cv
-from hekshermgmt.util import user_name, application, convert_responses
+from hekshermgmt.util import application, convert_responses, user_name
 
 logger = getLogger(__name__)
 

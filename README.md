@@ -19,14 +19,15 @@ The sidecar handles authentication, and then passes the authenticated user as a 
 * `HEKSHERMGMT_HEKSHER_URL`: (required) URL to the Heksher service.
 * `HEKSHERMGMT_HEKSHER_HEADERS`: (optional) Headers to send to Heksher service (authorization, api keys, etc). Example - `apitoken:abcd authorization:abcd`
 * `SENTRY_DSN`: (optional) Send errors to the given Sentry DSN.
+* `HEKSHERMGMT_REQUIRE_USER`: (optional) whether to require a user header to be passed from the reverse proxy.
 * `HEKSHERMGMT_LOGSTASH_HOST`, `HEKSHERMGMT_LOGSTASH_PORT`, `HEKSHERMGMT_LOGSTASH_LEVEL`, `HEKSHERMGMT_LOGSTASH_TAGS`: Optional values
   to allow sending logs to a logstash server.
+* `HEKSHERMGMT_BANNER_BANNER_TEXT`: (optional) Text to display in a banner above the app.
+* `HEKSHERMGMT_BANNER_COLOR`: (optional) Background color of the banner (defaults to yellow).
+* `HEKSHERMGMT_BANNER_TEXT_COLOR`: (optional) Text color of the banner (defaults to black).
 
 ## Environment Variables to the Hekshermgmt frontend
 * `REACT_APP_BACKEND_URL`: (required) URL to the Hekshermgmt backend (already set in the image).
-* `REACT_APP_BANNER_TEXT`: (optional) Text to display in a banner above the app.
-* `REACT_APP_BANNER_COLOR`: (optional) Background color of the banner (defaults to yellow).
-* `REACT_APP_BANNER_TEXT_COLOR`: (optional) Text color of the banner (defaults to black).
 
 ## License
 HeksherMgmt is registered under the MIT public license.

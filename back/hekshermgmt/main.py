@@ -1,8 +1,9 @@
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware import Middleware
 
-from hekshermgmt.app import HeksherMgmtBackend
 from hekshermgmt.api.v1 import router as v1_router
+from hekshermgmt.app import HeksherMgmtBackend
+from hekshermgmt.backend.v1 import router as v1_backend_router
 
 middleware = []
 if __debug__:
@@ -18,6 +19,7 @@ if __debug__:
 
 app = HeksherMgmtBackend(title="HeksherManagement", middleware=middleware)
 app.include_router(v1_router)
+app.include_router(v1_backend_router)
 
 
 @app.on_event("startup")

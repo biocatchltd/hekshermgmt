@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogTitle, Link } from '@mui/material';
 import * as React from 'react';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { DialogProps } from '@mui/material/Dialog/Dialog';
+
 export function About(props: DialogProps) {
     return (
         <Dialog {...props}>

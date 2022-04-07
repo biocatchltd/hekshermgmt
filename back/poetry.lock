@@ -706,7 +706,7 @@ reference = "pypi-public"
 name = "requests"
 version = "2.27.1"
 description = "Python HTTP for Humans."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 
@@ -982,7 +982,7 @@ reference = "pypi-public"
 
 [[package]]
 name = "yellowbox"
-version = "0.6.8"
+version = "0.6.9"
 description = ""
 category = "dev"
 optional = false
@@ -990,21 +990,21 @@ python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
 docker = ">=4.2.0,<6.0.0"
-python-igraph = {version = ">=0.9.6,<0.9.8 || >0.9.8,<0.10.0", optional = true, markers = "extra == \"webserver\" or extra == \"_all\""}
+python-igraph = {version = "0.9.7", optional = true, markers = "extra == \"webserver\" or extra == \"dev\""}
 requests = "*"
-starlette = {version = "*", optional = true, markers = "extra == \"webserver\" or extra == \"_all\""}
-uvicorn = {version = "*", optional = true, markers = "extra == \"webserver\" or extra == \"_all\""}
-websockets = {version = "*", optional = true, markers = "extra == \"webserver\" or extra == \"_all\""}
+starlette = {version = ">=0.9.0", optional = true, markers = "extra == \"webserver\" or extra == \"dev\""}
+uvicorn = {version = ">=0.13.0", optional = true, markers = "extra == \"webserver\" or extra == \"dev\""}
+websockets = {version = "*", optional = true, markers = "extra == \"webserver\" or extra == \"dev\""}
 yaspin = ">=1.0.0,<2.0.0"
 
 [package.extras]
 azure = ["azure-storage-blob (>=12.0.0,<12.7.0)", "cffi (>=1.14.0,<2.0.0)"]
-_all = ["azure-storage-blob (>=12.0.0,<12.7.0)", "cffi (>=1.14.0,<2.0.0)", "hvac", "kafka-python", "pika", "psycopg2 (>=2.8.6,<3.0.0)", "python-igraph (>=0.9.6,!=0.9.8,<0.10.0)", "redis (>=3.3.0)", "simple-websocket-server", "sqlalchemy (>=1.3.0,<2.0.0)", "starlette", "uvicorn", "websockets"]
+dev = ["azure-storage-blob (>=12.0.0,<12.7.0)", "cffi (>=1.14.0,<2.0.0)", "hvac", "kafka-python", "pika", "psycopg2 (>=2.8.6,<3.0.0)", "python-igraph (==0.9.7)", "redis (>=3.3.0)", "simple-websocket-server", "sqlalchemy (>=1.3.0,<2.0.0)", "starlette (>=0.9.0)", "uvicorn (>=0.13.0)", "websockets"]
 vault = ["hvac"]
 kafka = ["kafka-python"]
 rabbit = ["pika"]
 postgresql = ["psycopg2 (>=2.8.6,<3.0.0)", "sqlalchemy (>=1.3.0,<2.0.0)"]
-webserver = ["python-igraph (>=0.9.6,!=0.9.8,<0.10.0)", "starlette", "uvicorn", "websockets"]
+webserver = ["python-igraph (==0.9.7)", "starlette (>=0.9.0)", "uvicorn (>=0.13.0)", "websockets"]
 redis = ["redis (>=3.3.0)"]
 websocket = ["simple-websocket-server"]
 
@@ -1016,7 +1016,7 @@ reference = "pypi-public"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.8"
-content-hash = "66b4cb49723435d0b68a27691b397b1e8e78eeccd992a032f2b4e26e84325b4d"
+content-hash = "652e95932b81e87725f08b67d1dadcb77736e49682d8a4637b667177e1a3575f"
 
 [metadata.files]
 aiologstash2 = [
@@ -1581,6 +1581,6 @@ yaspin = [
     {file = "yaspin-1.5.0.tar.gz", hash = "sha256:d8fc9bc1c8be225877ea6e2e08fec96c2b52e233525a5c40b92d373f015439c6"},
 ]
 yellowbox = [
-    {file = "yellowbox-0.6.8-py3-none-any.whl", hash = "sha256:3a561b08081b05657958b2ce694ce80c28cd027a48946566835241abaa228e3b"},
-    {file = "yellowbox-0.6.8.tar.gz", hash = "sha256:42663410f7a2f2e7ecfcafb4b2d5216f4ca102dc1ac104bcf7fbf7c0fd73701a"},
+    {file = "yellowbox-0.6.9-py3-none-any.whl", hash = "sha256:907de4662026f2f0a269a6c093f1b78be36bca9865f49aa128c0d3fd58964011"},
+    {file = "yellowbox-0.6.9.tar.gz", hash = "sha256:6ec3d329ec6348791146e368b0be857b71b2f5955f569c91fbfa5b82b2f64ae1"},
 ]

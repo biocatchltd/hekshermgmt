@@ -35,6 +35,12 @@ export interface ModelGetRule {
     metadata: Record<string, any>;
 }
 
+export interface BannerPropsModel {
+    text: string;
+    color: string;
+    text_color: string;
+}
+
 export class RuleSet {
     rules_per_setting: Map<string, RuleBranch>;
     context_options: Map<string, Set<string>>;

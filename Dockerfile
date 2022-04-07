@@ -1,8 +1,9 @@
 FROM node:lts as build-stage
 WORKDIR /app
-COPY frontend/package*.json ./
+COPY front/package*.json .
 RUN npm install
-COPY frontend .
+COPY front .
+ENV REACT_APP_BACKEND_URL http://localhost:80
 RUN npm run build
 
 # production stage
@@ -103,12 +104,10 @@ COPY ./image/supervisord.ini /etc/supervisord.ini
 COPY ./image/nginx.conf /etc/nginx/conf.d/nginx.conf
 COPY ./image/gunicorn_conf.py /gunicorn_conf.py
 
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | POETRY_HOME=/opt/poetry python && \
-    cd /usr/local/bin && \
-    ln -s /opt/poetry/bin/poetry && \
+RUN pip install poetry && \
     poetry config virtualenvs.create false
 
-COPY ./backend /app
+COPY ./back /app
 RUN cd /app && poetry install --no-dev --no-root
 
 RUN cd /app \
@@ -116,7 +115,7 @@ RUN cd /app \
     && echo "__version__ = '$APP_VERSION'" > /app/hekshermgmt/_version.py
 
 
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY --from=build-stage /app/build /usr/share/nginx/html
 
 ENV PYTHONOPTIMIZE=1
 ENV WEB_CONCURRENCY=1
