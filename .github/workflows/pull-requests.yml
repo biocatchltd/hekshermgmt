@@ -31,10 +31,8 @@ jobs:
       uses: docker-practice/actions-setup-docker@0.0.1
     - name: Linting backend
       run: poetry run sh scripts/lint.sh
-    - name: Run unittests
-      run: poetry run sh scripts/unittest.sh
-    - name: Run blackbox tests
-      run: poetry run sh scripts/blackbox_test.sh
+    - name: Run unittests on backend
+      run: poetry run sh scripts/test.sh
   frontend-lint:
     defaults:
       run:
@@ -45,5 +43,7 @@ jobs:
     - uses: actions/setup-node@v2
       with:
         node-version: '12'
-    - run: npm install
-    - run: npm run lint
+    - name: Linting frontent
+      run: sh scripts/lint.sh
+    - name: Run unittests on frontend
+      run: sh scripts/test.sh

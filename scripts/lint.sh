@@ -3,9 +3,7 @@
 set -e
 
 cd front
-npx eslint src
+sh scripts/lint.sh
 
 cd ../back
-poetry run isort . --check-only
-poetry run flake8 .
-poetry run mypy . --show-error-codes
+poetry run sh scripts/lint.sh
