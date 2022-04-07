@@ -7,10 +7,10 @@ on:
     branches: [ master ]
 
 jobs:
-  backend-lint-and-tests:
+  backend:
     defaults:
       run:
-        working-directory: backend
+        working-directory: back
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -33,10 +33,10 @@ jobs:
       run: poetry run sh scripts/lint.sh
     - name: Run unittests on backend
       run: poetry run sh scripts/test.sh
-  frontend-lint:
+  frontend:
     defaults:
       run:
-        working-directory: frontend
+        working-directory: front
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
