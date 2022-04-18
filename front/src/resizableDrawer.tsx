@@ -16,9 +16,7 @@ export function ResizableDrawer(props: ResizableDrawerProps) {
     const [width, setWidth] = React.useState(INITAL_WIDTH);
 
     useEffect(() => {
-        if (props.onWidthChange) {
-            props.onWidthChange(width);
-        }
+        props.onWidthChange && props.onWidthChange(width);
     }, [width]);
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {

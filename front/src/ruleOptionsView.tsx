@@ -1,9 +1,9 @@
-import { PotentialRule } from './potential_rules';
+import { PotentialRule } from './potentialRules';
 import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import * as React from 'react';
 import { useState } from 'react';
-import { ValueViewDialog } from './value_dialog';
-import { SettingType } from './setting_type';
+import { ValueViewDialog } from './valueDialog';
+import { SettingType } from './settingType';
 
 type RuleOptionsViewProps = {
     options: PotentialRule[];

@@ -9,7 +9,7 @@ import {
     RuleBranch,
     ruleBranchCopy,
     RuleLeaf,
-} from './potential_rules';
+} from './potentialRules';
 import * as React from 'react';
 import {
     Card,
@@ -28,16 +28,16 @@ import {
     Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import { TruncChip } from './trunc_string';
-import { ContextSelect } from './context_select';
+import { TruncChip } from './truncString';
+import { ContextSelect } from './contextSelect';
 import { TransitionGroup } from 'react-transition-group';
-import { ValueEditDialogConstContext, ValueEditDialogNewContext, ValueViewDialog } from './value_dialog';
+import { ValueEditDialogConstContext, ValueEditDialogNewContext, ValueViewDialog } from './valueDialog';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useMemo, useState } from 'react';
 import { AxiosInstance } from 'axios';
-import { ModelGetRule } from './index';
-import { ConfirmDialog } from './confirm_dialog';
+import { ModelGetRule } from './models';
+import { ConfirmDialog } from './confirmDialog';
 import { useSnackbar } from 'notistack';
 
 interface ModelAddRuleResponse {
@@ -460,7 +460,6 @@ export function RulesView(props: RulesViewProps) {
                     on_value_changed={(v) => setValueEditDialogValue(v)}
                     on_validity_changed={() => {}}
                     initialContext={valueEditDialogExistingProps.rule_context}
-                    existingRuleBranch={props.rules}
                     contextFeatures={props.setting.configurableFeatures}
                     isValidValue={(v) => props.setting.type.isValid(v)}
                 />

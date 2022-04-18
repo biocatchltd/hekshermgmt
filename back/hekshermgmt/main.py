@@ -3,7 +3,7 @@ from starlette.middleware import Middleware
 
 from hekshermgmt.api.v1 import router as v1_router
 from hekshermgmt.app import HeksherMgmtBackend
-from hekshermgmt.backend.v1 import router as v1_backend_router
+from hekshermgmt.backend.backend_v1 import router as v1_backend_router
 
 middleware = []
 if __debug__:

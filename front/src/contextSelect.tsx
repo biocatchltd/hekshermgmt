@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Stack, StackProps, TextField } from '@mui/material';
-import { AutocompleteWithDefault } from './autocomplete_with_default';
+import { AutocompleteWithDefault } from './autocompleteWithDefault';
 
 type ContextSelectProps = {
     context_options: Map<string, Set<string>>;
@@ -26,7 +26,7 @@ export function ContextSelect(props: ContextSelectProps) {
                 return (
                     <AutocompleteWithDefault
                         key={key + '@' + props.initialValue?.get(key)}
-                        props={{
+                        autoCompleteProps={{
                             style: { flexDirection: 'row', width: '100%', flex: 1 },
                             renderInput: (params) => <TextField {...params} label={key} />,
                             options: isConcrete ? ['*', ...options] : ['<none>', ...options],
@@ -35,7 +35,7 @@ export function ContextSelect(props: ContextSelectProps) {
                             onInputChange: (event, value: string | null) => props.filterChangeCallback(key, value),
                             value: props.initialValue?.get(key),
                         }}
-                        default={isConcrete ? '*' : ''}
+                        default_value={isConcrete ? '*' : ''}
                     />
                 );
             })}

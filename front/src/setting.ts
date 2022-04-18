@@ -1,6 +1,6 @@
-import { settingType, SettingType } from './setting_type';
-import { PotentialRule } from './potential_rules';
-import { ModelGetSetting } from './index';
+import { settingType, SettingType } from './settingType';
+import { PotentialRule } from './potentialRules';
+import { ModelGetSetting } from './models';
 
 export class Setting {
     name: string;

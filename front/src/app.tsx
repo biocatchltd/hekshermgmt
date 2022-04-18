@@ -3,7 +3,7 @@ import { ThemeProvider } from '@mui/styles';
 import { Backdrop, CircularProgress, Button, Box } from '@mui/material';
 import * as React from 'react';
 import { createTheme } from '@mui/material/styles';
-import { SettingsView } from './settings_view';
+import { SettingsView } from './settingsView';
 import { About } from './about';
 import { SnackbarProvider } from 'notistack';
 
@@ -12,6 +12,23 @@ export type BannerProps = {
     color: string;
     textColor: string;
 };
+
+function Banner(props: BannerProps) {
+    return (
+        <Box
+            sx={{
+                width: 1,
+                mb: 1,
+                py: 1,
+                pl: 3,
+                backgroundColor: props.color,
+                color: props.textColor,
+            }}
+        >
+            {props.text}
+        </Box>
+    );
+}
 
 export function App() {
     /**
@@ -22,23 +39,12 @@ export function App() {
     const [aboutOpen, setAboutOpen] = useState(false);
     const [bannerProps, setBannerProps] = useState<BannerProps | null>(null);
 
+    const theme = createTheme();
+
     return (
-        <ThemeProvider theme={createTheme()}>
+        <ThemeProvider theme={theme}>
             <SnackbarProvider maxSnack={3}>
-                {bannerProps && (
-                    <Box
-                        sx={{
-                            width: 1,
-                            mb: 1,
-                            py: 1,
-                            pl: 3,
-                            backgroundColor: bannerProps.color,
-                            color: bannerProps.textColor,
-                        }}
-                    >
-                        {bannerProps.text}
-                    </Box>
-                )}
+                {bannerProps && <Banner {...bannerProps} />}
                 <Backdrop open={processing !== null} sx={{ zIndex: 1300 }}>
                     <CircularProgress />
                 </Backdrop>

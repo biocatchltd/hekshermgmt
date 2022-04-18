@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Box, Stack, Chip, ChipProps } from '@mui/material';
-import { HiddenString } from './hidden_string';
+import { HiddenString } from './hiddenString';
 import DetectableOverflow from 'react-detectable-overflow';
 import { Fragment } from 'react';
 

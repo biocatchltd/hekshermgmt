@@ -8,7 +8,7 @@ import {
     ruleBranchCopy,
     ruleBranchFromRules,
     RuleLeaf,
-} from './potential_rules';
+} from './potentialRules';
 
 test('rulebranch_from_rules', () => {
     const r0 = new RuleLeaf(

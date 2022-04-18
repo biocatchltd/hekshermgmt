@@ -16,10 +16,12 @@ import {
     Grid,
     Button,
 } from '@mui/material';
-import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
-import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import { useEffect, useState } from 'react';
-import { primitive_to_str } from './setting_type';
+import { primitive_to_str } from './settingType';
 import * as React from 'react';
 import useDeepEffect from '@lucarestagno/use-deep-effect';
 
@@ -177,7 +179,7 @@ export function ControlledTransferList(props: ControlledTransferListProps) {
                         return (
                             <ListItem key={value} role='listitem' button onClick={transfer(value)}>
                                 <ListItemIcon>
-                                    {is_left ? <ArrowCircleRightIcon /> : <ArrowCircleLeftIcon />}
+                                    {is_left ? <ArrowForwardIosIcon /> : <ArrowBackIosNewIcon />}
                                 </ListItemIcon>
                                 <ListItemText id={labelId} primary={primitive_to_str(value)} />
                             </ListItem>
@@ -202,7 +204,7 @@ export function ControlledTransferList(props: ControlledTransferListProps) {
                         disabled={included.size === 0}
                         aria-label='exclude all'
                     >
-                        ≫
+                        <KeyboardDoubleArrowRightIcon />
                     </Button>
                     <Button
                         sx={{ my: 0.5 }}
@@ -212,7 +214,7 @@ export function ControlledTransferList(props: ControlledTransferListProps) {
                         disabled={excluded.size === 0}
                         aria-label='include all'
                     >
-                        ≪
+                        <KeyboardDoubleArrowLeftIcon />
                     </Button>
                 </Grid>
             </Grid>

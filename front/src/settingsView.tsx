@@ -1,21 +1,21 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Setting } from './setting';
 import axios from 'axios';
-import { BannerPropsModel, ModelGetSettings, ModelQuery, RuleSet } from './index';
+import { BannerPropsModel, ModelGetSettings, ModelQuery, RuleSet } from './models';
 import { Chip, ChipProps, CircularProgress, Fab, Grid, IconButton } from '@mui/material';
-import { getPotentialRules, RuleBranch } from './potential_rules';
+import { getPotentialRules, RuleBranch } from './potentialRules';
 import MUIDataTable, { MUIDataTableColumn } from 'mui-datatables';
 import BallotIcon from '@mui/icons-material/Ballot';
-import { TruncChip } from './trunc_string';
-import { ExpandChip } from './expand_chip';
-import { ContextSelect } from './context_select';
+import { TruncChip } from './truncString';
+import { ExpandChip } from './expandChip';
+import { ContextSelect } from './contextSelect';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { ResizableDrawer } from './resizable_drawer';
+import { ResizableDrawer } from './resizableDrawer';
 import * as React from 'react';
-import { RulesView } from './rules_view';
-import { ValueViewDialog } from './value_dialog';
-import { RuleOptionsView } from './rule_options_view';
+import { RulesView } from './rulesView';
+import { ValueViewDialog } from './valueDialog';
+import { RuleOptionsView } from './ruleOptionsView';
 import { BannerProps } from './app';
 
 const SET_RULES_PANEL_BUTTON_RIGHT_CHANGE_THRESHOLD = 50; // in milliseconds
@@ -247,11 +247,11 @@ export function SettingsView(props: SettingsViewProps) {
                     } else {
                         let value: any;
                         let viewTitle: string;
-                        let sx: ChipProps = { color: 'primary' };
+                        let chipProps: ChipProps = { color: 'primary' };
                         if (rules[0].rule.rule_id === -1) {
                             // default rule
                             value = setting.default_value;
-                            sx = { color: 'default' };
+                            chipProps = { color: 'default' };
                             viewTitle = `${setting.name} default value`;
                         } else {
                             value = rules[0].rule.value;
@@ -267,7 +267,7 @@ export function SettingsView(props: SettingsViewProps) {
                                             element: setting.type.asViewElement(value),
                                             export: JSON.stringify(value),
                                         }),
-                                    ...sx,
+                                    ...chipProps,
                                 }}
                             />
                         );

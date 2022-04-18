@@ -18,13 +18,8 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RemoveIcon from '@mui/icons-material/Remove';
 import * as React from 'react';
 import { ReactNode, useState } from 'react';
-import { ValueEditDialogNoContext, ValueViewDialog } from './value_dialog';
-import {
-    ControlledRadioGroup,
-    ControlledSwitch,
-    ControlledTextField,
-    ControlledTransferList,
-} from './controlled_input';
+import { ValueEditDialogConstContext, ValueViewDialog } from './valueDialog';
+import { ControlledRadioGroup, ControlledSwitch, ControlledTextField, ControlledTransferList } from './controlledInput';
 import AddIcon from '@mui/icons-material/Add';
 import { TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
@@ -606,7 +601,7 @@ function LongSequenceEdit(props: SequenceEditProps) {
                 {...props}
             />
             {dialogProps !== null && (
-                <ValueEditDialogNoContext
+                <ValueEditDialogConstContext
                     open={true}
                     onClose={(ok) => {
                         if (!ok) {
@@ -620,6 +615,8 @@ function LongSequenceEdit(props: SequenceEditProps) {
                     on_validity_changed={dialogProps!.err_cb}
                     children_factory={dialogProps!.children_factory}
                     isValidValue={(v) => props.elementType.isValid(v)}
+                    contextFeatures={null}
+                    initialContext={null}
                 />
             )}
         </>
@@ -902,7 +899,7 @@ function LongMappingEdit(props: MappingEditProps) {
                 {...props}
             />
             {dialogProps !== null && (
-                <ValueEditDialogNoContext
+                <ValueEditDialogConstContext
                     open={true}
                     onClose={(ok) => {
                         if (!ok) {
@@ -916,6 +913,8 @@ function LongMappingEdit(props: MappingEditProps) {
                     on_validity_changed={dialogProps!.err_cb}
                     children_factory={dialogProps!.children_factory}
                     isValidValue={(v) => props.valueType.isValid(v)}
+                    contextFeatures={null}
+                    initialContext={null}
                 />
             )}
         </>

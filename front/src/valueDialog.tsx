@@ -15,12 +15,12 @@ import {
 } from '@mui/material';
 import Draggable from 'react-draggable';
 import * as React from 'react';
-import { ContextSelect } from './context_select';
-import { getRule, RuleBranch, RuleLeaf } from './potential_rules';
+import { ContextSelect } from './contextSelect';
+import { getRule, RuleBranch, RuleLeaf } from './potentialRules';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { useSnackbar } from 'notistack';
-import { ConfirmDialog } from './confirm_dialog';
+import { ConfirmDialog } from './confirmDialog';
 
 type ValueViewDialogProps = {
     open: boolean;
@@ -71,40 +71,6 @@ export function ValueViewDialog(props: ValueViewDialogProps) {
         </Dialog>
     );
 }
-
-type ValueEditDialogNoContextProps = {
-    open: boolean;
-    onClose: (ok: boolean) => void;
-    initial_value: any;
-    on_value_changed: (new_value: any) => void;
-    on_validity_changed: (new_err: string) => void;
-    children_factory: (
-        value: any,
-        on_change_value: (new_value: any) => void,
-        on_change_validity: (err: string) => void,
-    ) => ReactNode;
-    title: string;
-    isValidValue: (value: any) => boolean;
-};
-
-type ValueEditDialogConstContextProps = {
-    open: boolean;
-    onClose: (ok: boolean) => void;
-    initial_value: any;
-    on_value_changed: (new_value: any) => void;
-    on_validity_changed: (new_err: string) => void;
-    children_factory: (
-        value: any,
-        on_change_value: (new_value: any) => void,
-        on_change_validity: (err: string) => void,
-    ) => ReactNode;
-    title: string;
-
-    initialContext: Map<string, string>;
-    existingRuleBranch: RuleBranch;
-    contextFeatures: string[];
-    isValidValue: (value: any) => boolean;
-};
 
 type ValueEditDialogNewContextProps = {
     open: boolean;
@@ -177,6 +143,22 @@ function BaseValueEditDialog(props: BaseValueEditDialogProps) {
         props.on_value_validity_changed(valueError);
     }, [valueError]);
 
+    const onImportedValueChange = (new_json: string) => {
+        let imported_value;
+        try {
+            imported_value = JSON.parse(new_json);
+        } catch (e) {
+            setImportError(e.message);
+            return;
+        }
+        if (!props.isValidValue(imported_value)) {
+            setImportError('invalid value');
+            return;
+        }
+        setImportError('');
+        setImportValue(imported_value);
+    };
+
     return (
         <Dialog
             open={props.open}
@@ -224,19 +206,7 @@ function BaseValueEditDialog(props: BaseValueEditDialogProps) {
                 >
                     <TextField
                         onChange={(event) => {
-                            let imported_value;
-                            try {
-                                imported_value = JSON.parse(event.target.value);
-                            } catch (e) {
-                                setImportError(e.message);
-                                return;
-                            }
-                            if (!props.isValidValue(imported_value)) {
-                                setImportError('invalid value');
-                                return;
-                            }
-                            setImportError('');
-                            setImportValue(imported_value);
+                            onImportedValueChange(event.target.value);
                         }}
                         multiline
                         error={importError !== ''}
@@ -343,17 +313,38 @@ export function ValueEditDialogNewContext(props: ValueEditDialogNewContextProps)
     );
 }
 
+type ValueEditDialogConstContextProps = {
+    open: boolean;
+    onClose: (ok: boolean) => void;
+    initial_value: any;
+    on_value_changed: (new_value: any) => void;
+    on_validity_changed: (new_err: string) => void;
+    children_factory: (
+        value: any,
+        on_change_value: (new_value: any) => void,
+        on_change_validity: (err: string) => void,
+    ) => ReactNode;
+    title: string;
+
+    initialContext: Map<string, string> | null;
+    contextFeatures: string[] | null;
+    isValidValue: (value: any) => boolean;
+};
+
 export function ValueEditDialogConstContext(props: ValueEditDialogConstContextProps) {
     // all contexts that are "undefined" in the partial context should default to *
-    const context = new Map(
-        Array.from(props.contextFeatures).map((k) => {
-            let v = props.initialContext!.get(k);
-            if (v === undefined || v === '<none>') {
-                v = '*';
-            }
-            return [k, v];
-        }),
-    );
+    const context =
+        props.contextFeatures &&
+        props.initialContext &&
+        new Map(
+            Array.from(props.contextFeatures).map((k) => {
+                let v = props.initialContext!.get(k);
+                if (v === undefined || v === '<none>') {
+                    v = '*';
+                }
+                return [k, v];
+            }),
+        );
 
     return (
         <BaseValueEditDialog
@@ -366,30 +357,14 @@ export function ValueEditDialogConstContext(props: ValueEditDialogConstContextPr
             title={props.title}
             isValidValue={props.isValidValue}
             context_children={
-                <Typography sx={{ ml: 3 }}>
-                    {Array.from(context.entries())
-                        .map(([k, v]) => `${k}: ${v}`)
-                        .join(', ')}
-                </Typography>
+                context && (
+                    <Typography sx={{ ml: 3 }}>
+                        {Array.from(context.entries())
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(', ')}
+                    </Typography>
+                )
             }
-            info_area={null}
-            contextError={''}
-        />
-    );
-}
-
-export function ValueEditDialogNoContext(props: ValueEditDialogNoContextProps) {
-    return (
-        <BaseValueEditDialog
-            open={props.open}
-            onClose={props.onClose}
-            initial_value={props.initial_value}
-            on_value_changed={props.on_value_changed}
-            on_value_validity_changed={props.on_validity_changed}
-            children_factory={props.children_factory}
-            title={props.title}
-            isValidValue={props.isValidValue}
-            context_children={null}
             info_area={null}
             contextError={''}
         />

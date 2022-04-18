@@ -1,4 +1,4 @@
-import { ModelGetRule, ModelRule } from './index';
+import { ModelGetRule, ModelRule } from './models';
 
 const exact_match = Symbol('e');
 const wildcard = Symbol('w');

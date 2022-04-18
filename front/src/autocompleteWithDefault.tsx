@@ -3,15 +3,15 @@ import { SyntheticEvent, useState } from 'react';
 import * as React from 'react';
 
 type AutocompleteWithDefaultProps = {
-    props: AutocompleteProps<any, any, any, any>;
-    default: string;
+    autoCompleteProps: AutocompleteProps<any, any, any, any>;
+    default_value: string;
 };
 
 /**
  * a managed autocomplete component that defaults to a non-blank value when cleared
  */
-export function AutocompleteWithDefault(props: AutocompleteWithDefaultProps) {
-    const [value, setValue] = useState(props.props.value ?? '');
+export function AutocompleteWithDefault({ autoCompleteProps, default_value }: AutocompleteWithDefaultProps) {
+    const [value, setValue] = useState(autoCompleteProps.value ?? '');
     const [inputValue, setInputValue] = useState(value);
 
     const handleInputValueChange = (
@@ -20,28 +20,28 @@ export function AutocompleteWithDefault(props: AutocompleteWithDefaultProps) {
         reason: AutocompleteInputChangeReason,
     ) => {
         if (reason === 'clear') {
-            new_value = props.default;
+            new_value = default_value;
         }
         setInputValue(new_value);
-        if (props.props.onInputChange !== undefined) {
-            props.props.onInputChange(event, new_value, reason);
+        if (autoCompleteProps.onInputChange !== undefined) {
+            autoCompleteProps.onInputChange(event, new_value, reason);
         }
     };
 
     return (
         <Autocomplete
-            {...props.props}
+            {...autoCompleteProps}
             freeSolo
             value={value}
             inputValue={inputValue}
             onInputChange={handleInputValueChange}
             onChange={(e, v, r) => {
                 if (r === 'clear') {
-                    v = props.default;
+                    v = default_value;
                 }
                 setValue(v);
-                if (props.props.onChange !== undefined) {
-                    props.props.onChange(e, v, r);
+                if (autoCompleteProps.onChange !== undefined) {
+                    autoCompleteProps.onChange(e, v, r);
                 }
             }}
         />
