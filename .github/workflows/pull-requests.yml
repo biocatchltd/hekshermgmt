@@ -7,10 +7,10 @@ on:
     branches: [ master ]
 
 jobs:
-  backend-lint-and-tests:
+  backend:
     defaults:
       run:
-        working-directory: backend
+        working-directory: back
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -31,14 +31,12 @@ jobs:
       uses: docker-practice/actions-setup-docker@0.0.1
     - name: Linting backend
       run: poetry run sh scripts/lint.sh
-    - name: Run unittests
-      run: poetry run sh scripts/unittest.sh
-    - name: Run blackbox tests
-      run: poetry run sh scripts/blackbox_test.sh
-  frontend-lint:
+    - name: Run unittests on backend
+      run: poetry run sh scripts/test.sh
+  frontend:
     defaults:
       run:
-        working-directory: frontend
+        working-directory: front
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -46,4 +44,7 @@ jobs:
       with:
         node-version: '12'
     - run: npm install
-    - run: npm run lint
+    - name: Linting frontent
+      run: sh scripts/lint.sh
+    - name: Run unittests on frontend
+      run: sh scripts/test.sh

@@ -1,0 +1,83 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:react/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-ts-ignore": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/camelcase": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-empty-function": ["error", { "allow": ["arrowFunctions"] }],
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "react/jsx-filename-extension": [
+      1,
+      {
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
+      }
+    ],
+    "react/jsx-props-no-spreading": "off",
+    "import/no-named-as-default": "off",
+    "indent": "off",
+    "no-tabs": "off",
+    "react/no-did-update-set-state": "off",
+    "react/no-array-index-key": "off",
+    "jsx-quotes": [2, "prefer-single"],
+    "max-len": ["warn", 125],
+    "consistent-return": "off",
+    "no-shadow": ["error", { "builtinGlobals": false, "hoist": "functions", "allow": ["v"] }],
+    "arrow-parens": "off",
+    "no-confusing-arrow": "off",
+    "import/extensions": "off",
+    "one-var-declaration-per-line": "off",
+    "cypress/no-assigning-return-values": "error",
+    "cypress/no-unnecessary-waiting": "error",
+    "cypress/assertion-before-screenshot": "warn",
+    "cypress/no-force": "warn",
+    "prettier/prettier": "error"
+  },
+  "plugins": [
+    "react",
+    "prettier",
+    "import",
+    "jsx-a11y",
+    "flowtype",
+    "@typescript-eslint",
+    "cypress",
+    "react-hooks",
+    "cypress"
+  ],
+  "env": {
+    "browser": true,
+    "jest": true,
+    "node" : true,
+    "es6": true
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
+      }
+    },
+    "react": {
+      "version": "detect"
+    }
+  }
+}

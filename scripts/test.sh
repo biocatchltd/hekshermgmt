@@ -1,3 +1,9 @@
 #!/bin/sh
-sh backend/scripts/test.sh
-(cd frontend; npm run lint)
+
+set -e
+
+cd front
+sh scripts/test.sh
+
+cd ../back
+poetry run sh scripts/test.sh
