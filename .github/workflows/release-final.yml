@@ -9,6 +9,9 @@ on:
 
 jobs:
   verify_version:
+    defaults:
+      run:
+        working-directory: back
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
 
