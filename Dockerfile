@@ -3,7 +3,7 @@ WORKDIR /app
 COPY front/package*.json .
 RUN npm install
 COPY front .
-ENV REACT_APP_BACKEND_URL http://localhost:80
+ENV REACT_APP_BACKEND_URL=
 RUN npm run build
 
 # production stage
