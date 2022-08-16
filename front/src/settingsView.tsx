@@ -55,7 +55,7 @@ export function SettingsView(props: SettingsViewProps) {
 
     let base_url;
     let base_headers = {};
-    if (process.env.REACT_APP_BACKEND_URL) {
+    if (process.env.REACT_APP_BACKEND_URL !== undefined) {
         base_url = process.env.REACT_APP_BACKEND_URL;
     } else if (process.env.NODE_ENV === 'development') {
         base_url = 'http://localhost:8000';
