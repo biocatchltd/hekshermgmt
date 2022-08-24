@@ -46,7 +46,7 @@
     "cypress/no-unnecessary-waiting": "error",
     "cypress/assertion-before-screenshot": "warn",
     "cypress/no-force": "warn",
-    "prettier/prettier": "error"
+    "prettier/prettier": "warn"
   },
   "plugins": [
     "react",

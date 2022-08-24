@@ -41,17 +41,17 @@ export function ControlledTextField(props: ControlledTextFieldProps) {
         setValue(props.initialValue);
     }, [props.initialValue]);
 
-    if (props.errorMsg !== undefined) {
-        useEffect(() => {
+    useEffect(() => {
+        if (props.errorMsg !== undefined) {
             const msg = props.errorMsg?.(value);
             setErrorText(msg ?? '');
-        }, [value]);
-        if (props.onValidityChange !== undefined) {
-            useEffect(() => {
-                props.onValidityChange?.(errorText);
-            }, [errorText]);
         }
-    }
+    }, [value]);
+    useEffect(() => {
+        if (props.onValidityChange !== undefined) {
+            props.onValidityChange?.(errorText);
+        }
+    }, [errorText]);
 
     return (
         <TextField

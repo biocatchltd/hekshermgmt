@@ -446,10 +446,24 @@ type BaseSequenceEditProps = {
 
 function BaseSequenceEdit(props: BaseSequenceEditProps) {
     // each item is a tuple of a value, const key, and error
+
     const [items, setItems] = useState(props.initialValue.map((v) => [v, uuid(), '']));
 
     useDeepEffect(() => {
-        setItems(props.initialValue.map((v) => [v, uuid(), '']));
+        if (props.initialValue.length != items.length) {
+            setItems(props.initialValue.map((v) => [v, uuid(), '']));
+        } else {
+            let any_changed = false;
+            for (const idx in items) {
+                if (props.initialValue[idx] != items[idx][0]) {
+                    items[idx] = [props.initialValue[idx], uuid(), ''];
+                    any_changed = true;
+                }
+            }
+            if (any_changed) {
+                setItems(items);
+            }
+        }
     }, [props.initialValue]);
 
     useDeepEffect(() => {
@@ -674,7 +688,9 @@ class SequenceSettingType<E> implements SettingType<E[]> {
             onChange: onChange,
             onValidityChange: onValidChange,
         };
-        if (this.elementType.editElementShort()) {
+        if (this.elementType.editElementShort() && value.length < 50) {
+            // todo we check the length because we currently render large lists very slowly, we should fix that and
+            //  remove this check
             return <ShortSequenceEdit {...props} />;
         } else {
             return <LongSequenceEdit {...props} />;
@@ -969,7 +985,9 @@ class MapSettingType<V> implements SettingType<Record<string, V>> {
             onChange: onChange,
             onValidityChange: onValidChange,
         };
-        if (this.valueType.editElementShort()) {
+        if (this.valueType.editElementShort() && Object.keys(value).length < 50) {
+            // todo we check the length because we currently render large lists very slowly, we should fix that and
+            //  remove this check
             return <ShortMappingEdit {...props} />;
         } else {
             return <LongMappingEdit {...props} />;

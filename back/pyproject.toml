@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hekshermgmt"
-version = "0.2.2"
+version = "0.2.3"
 description = "Heksher Management Tool (backend)"
 authors = ["Dev Team <server@biocatch.com>"]
 
