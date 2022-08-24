@@ -174,7 +174,7 @@ function BaseValueEditDialog(props: BaseValueEditDialogProps) {
                 {valueError && <Alert severity='error'>{valueError}</Alert>}
                 <div>
                     {props.children_factory(
-                        value,
+                        props.initial_value,
                         (v) => setValue(v),
                         (e) => setValueError(e),
                     )}
