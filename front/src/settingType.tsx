@@ -497,7 +497,7 @@ function BaseSequenceEdit(props: BaseSequenceEditProps) {
 
     const handleEdit = (idx: number) => (v: any) => {
         const newItems = items.slice();
-        newItems[idx][0] = v;
+        newItems[idx] = [v, newItems[idx][1], newItems[idx][2]];
         setItems(newItems);
     };
 
@@ -808,7 +808,7 @@ function BaseMappingEdit(props: BaseMappingEditProps) {
 
     const handleEditValue = (idx: number) => (v: any) => {
         const newEntryItems = entries.slice();
-        newEntryItems[idx][1][0] = v;
+        newEntryItems[idx] = [newEntryItems[idx][0][0], [v, newEntryItems[idx][1][1], newEntryItems[idx][1][2]]];
         setEntries(newEntryItems);
     };
 

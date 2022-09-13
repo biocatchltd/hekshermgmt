@@ -3,9 +3,7 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-    "plugin:react/recommended",
-    "prettier"
+    "plugin:react/recommended"
   ],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
@@ -46,11 +44,10 @@
     "cypress/no-unnecessary-waiting": "error",
     "cypress/assertion-before-screenshot": "warn",
     "cypress/no-force": "warn",
-    "prettier/prettier": "warn"
+    "prettier/prettier": "off"
   },
   "plugins": [
     "react",
-    "prettier",
     "import",
     "jsx-a11y",
     "flowtype",
