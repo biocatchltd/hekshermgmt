@@ -1,5 +1,5 @@
 {
-  "version": "0.2.3",
+  "version": "0.2.4",
   "dependencies": {
     "@lucarestagno/use-deep-effect": "^1.0.7",
     "@mui/icons-material": "^5.0.1",
