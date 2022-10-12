@@ -77,6 +77,16 @@ function getRuleMetadataKeys(rule: RuleLeaf): [string, any][] {
 function RuleCard(props: RuleCardProps) {
     return (
         <Card sx={{ p: '16px' }}>
+            {!props.isDefault && (
+                <CardActions style={{ display: 'flex'}} sx={{ pl: '0' }}>
+                    <IconButton size='small' onClick={() => props.onEditClick()}>
+                        <EditIcon />
+                    </IconButton>
+                    <IconButton size='small' onClick={() => props.onDeleteClick()}>
+                        <DeleteIcon />
+                    </IconButton>
+                </CardActions>
+            )}
             <Link variant='h6' underline='hover' onClick={props.onValueClick}>
                 {props.setting.type.Format(props.potentialRule.rule.value)}
             </Link>
@@ -94,16 +104,7 @@ function RuleCard(props: RuleCardProps) {
                     </>
                 )}
             </CardContent>
-            {!props.isDefault && (
-                <CardActions style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <IconButton size='small' onClick={() => props.onEditClick()}>
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton size='small' onClick={() => props.onDeleteClick()}>
-                        <DeleteIcon />
-                    </IconButton>
-                </CardActions>
-            )}
+
         </Card>
     );
 }
@@ -486,3 +487,4 @@ export function RulesView(props: RulesViewProps) {
         </>
     );
 }
+
