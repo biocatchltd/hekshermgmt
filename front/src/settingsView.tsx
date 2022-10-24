@@ -165,14 +165,21 @@ export function SettingsView(props: SettingsViewProps) {
                         <>
                             <IconButton
                                 onClick={() => {
-                                    // setRulesPanelOpen(!rulesPanelOpen);
                                     setRulesPanelOpen(true);
                                     setRulesPanelSetting(setting);
                                 }}
                             >
                                 <BallotIcon />
                             </IconButton>
-                            {value}
+                            <span
+                                onClick={() => {
+                                    setRulesPanelOpen(true);
+                                    setRulesPanelSetting(setting);
+                                }}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                {value}
+                            </span>
                         </>
                     );
                 },
@@ -408,4 +415,3 @@ export function SettingsView(props: SettingsViewProps) {
         </Fragment>
     );
 }
-

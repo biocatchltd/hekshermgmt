@@ -355,9 +355,31 @@ class FlagsSettingType implements SettingType<(number | boolean | string)[]> {
     }
 
     Format(value: any): string {
-        const parts = value.map((v: any) => JSON.stringify(v));
+        const limit = 40;
+        let count = 0;
+        let format = '';
+        const parts = [];
+
+        for (let i = 0; i < value.length; i++) {
+            const elm = JSON.stringify(value[i]);
+            count += elm.length;
+            if (count <= limit || i === 0) {
+                parts.push(elm);
+            } else {
+                break;
+            }
+        }
+
         parts.sort();
-        return '[' + parts.join(', ') + ']';
+
+        format = '[';
+        for (let i = 0; i < parts.length; i++) {
+            if (i !== 0) format = format + ', ' + parts[i];
+            else format = format + parts[i];
+            if (parts.length < value.length && i === parts.length - 1) format = format + ', ... ';
+        }
+        format = format + ']';
+        return format;
     }
 
     asViewElement(value: any[]): JSX.Element {
@@ -679,15 +701,6 @@ class SequenceSettingType<E> implements SettingType<E[]> {
         return 'Sequence<' + this.elementType.toString() + '>';
     }
 
-    // Format(value: E[]): string {
-    //     let format = '';
-    //     format = '[' + value.map((v: any) => this.elementType.Format(v)).join(', ');
-    //     if (format.length <= 40) {
-    //         return format + ']';
-    //     } else {
-    //         return format.slice(0, 40) + '...' + ']';
-    //     }
-    // }
     Format(value: E[]): string {
         let format = '';
         const limit = 40;
@@ -1000,13 +1013,29 @@ class MapSettingType<V> implements SettingType<Record<string, V>> {
     }
 
     Format(value: Record<string, V>): string {
-        return (
-            '{' +
-            Object.entries(value)
-                .map(([k, v]) => k + ': ' + this.valueType.Format(v))
-                .join(', ') +
-            '}'
-        );
+        let format = '';
+        const limit = 40;
+        let index = 0;
+        let count = 0;
+
+        let isShortened = false;
+
+        format = '{';
+        for (const [k, v] of Object.entries(value)) {
+            const elm = k + ': ' + this.valueType.Format(v);
+            count += elm.length;
+            if (count <= limit || index === 0) format = format + elm + ', ';
+            else {
+                format = format + '...';
+                isShortened = true;
+                break;
+            }
+            index++;
+        }
+        if (!isShortened) format = format.slice(0, -2);
+        format = format + '}';
+        return format;
+
     }
 
     asData(value: any): string | number {
@@ -1068,6 +1097,7 @@ export function settingType(type: string): SettingType<any> {
         case 'float':
             return new FloatSettingType();
     }
+
     if (type.startsWith('Enum[')) {
         const parts = type.substring(5, type.length - 1).split(',');
         const values = parts.map((v) => JSON.parse(v));
@@ -1090,4 +1120,3 @@ export function settingType(type: string): SettingType<any> {
     }
     throw new Error('Unknown setting type: ' + type);
 }
-
