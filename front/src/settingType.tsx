@@ -24,6 +24,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import useDeepEffect from '@lucarestagno/use-deep-effect';
+import { FixedSizeList } from 'react-window';
 
 export interface SettingType<T> {
     /**
@@ -354,9 +355,31 @@ class FlagsSettingType implements SettingType<(number | boolean | string)[]> {
     }
 
     Format(value: any): string {
-        const parts = value.map((v: any) => JSON.stringify(v));
+        const limit = 40;
+        let count = 0;
+        let format = '';
+        const parts = [];
+
+        for (let i = 0; i < value.length; i++) {
+            const elm = JSON.stringify(value[i]);
+            count += elm.length;
+            if (count <= limit || i === 0) {
+                parts.push(elm);
+            } else {
+                break;
+            }
+        }
+
         parts.sort();
-        return '[' + parts.join(', ') + ']';
+
+        format = '[';
+        for (let i = 0; i < parts.length; i++) {
+            if (i !== 0) format = format + ', ' + parts[i];
+            else format = format + parts[i];
+            if (parts.length < value.length && i === parts.length - 1) format = format + ', ... ';
+        }
+        format = format + ']';
+        return format;
     }
 
     asViewElement(value: any[]): JSX.Element {
@@ -444,6 +467,13 @@ type BaseSequenceEditProps = {
     onValidityChange: (err: string) => void;
 };
 
+type RowProps = {
+    index: number;
+    style: React.CSSProperties;
+    listItemStyle: React.CSSProperties;
+    data: any[];
+};
+
 function BaseSequenceEdit(props: BaseSequenceEditProps) {
     // each item is a tuple of a value, const key, and error
 
@@ -521,54 +551,66 @@ function BaseSequenceEdit(props: BaseSequenceEditProps) {
         setItems(newItems);
     };
 
+    const Row = ({ data, index, style }: RowProps) => (
+        <div style={style}>
+            <TransitionGroup>
+                <Collapse key={data[index][1].toString()}>
+                    <Divider textAlign='right'>
+                        <IconButton size='small' onClick={handleAdd(data[index][0], index)}>
+                            <AddIcon />
+                        </IconButton>
+                    </Divider>
+                    <ListItem>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                            <div style={{ flexGrow: '1' }}>
+                                {props.elementFactory(
+                                    data[index][0],
+                                    index,
+                                    handleEdit(index),
+                                    handleErrorChange(index),
+                                )}
+                            </div>
+                            <Stack spacing={0}>
+                                <IconButton
+                                    size='small'
+                                    disabled={index == 0}
+                                    onClick={handleMoveUp(index)}
+                                    sx={{ my: '0px' }}
+                                >
+                                    <ArrowDropUpIcon />
+                                </IconButton>
+                                <IconButton size='small' onClick={handleRemove(index)} sx={{ my: '-15px' }}>
+                                    <RemoveIcon />
+                                </IconButton>
+                                <IconButton
+                                    size='small'
+                                    disabled={index == items.length - 1}
+                                    onClick={handleMoveDown(index)}
+                                    sx={{ my: '0px' }}
+                                >
+                                    <ArrowDropDownIcon />
+                                </IconButton>
+                            </Stack>
+                        </div>
+                    </ListItem>
+                </Collapse>
+            </TransitionGroup>
+
+            {data[data.length - 1][1].toString() === data[index][1].toString() ? (
+                <Divider textAlign='right' key={data.length}>
+                    <IconButton size='small' onClick={handleAddToEnd()}>
+                        <AddIcon />
+                    </IconButton>
+                </Divider>
+            ) : null}
+        </div>
+    );
+
     return (
         <List>
-            <TransitionGroup>
-                {items.map((v, i) => {
-                    return (
-                        <Collapse key={[v[1]].toString()}>
-                            <Divider textAlign='right'>
-                                <IconButton size='small' onClick={handleAdd(v[0], i)}>
-                                    <AddIcon />
-                                </IconButton>
-                            </Divider>
-                            <ListItem>
-                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                                    <div style={{ flexGrow: '1' }}>
-                                        {props.elementFactory(v[0], i, handleEdit(i), handleErrorChange(i))}
-                                    </div>
-                                    <Stack spacing={0}>
-                                        <IconButton
-                                            size='small'
-                                            disabled={i == 0}
-                                            onClick={handleMoveUp(i)}
-                                            sx={{ my: '0px' }}
-                                        >
-                                            <ArrowDropUpIcon />
-                                        </IconButton>
-                                        <IconButton size='small' onClick={handleRemove(i)} sx={{ my: '-15px' }}>
-                                            <RemoveIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            size='small'
-                                            disabled={i == items.length - 1}
-                                            onClick={handleMoveDown(i)}
-                                            sx={{ my: '0px' }}
-                                        >
-                                            <ArrowDropDownIcon />
-                                        </IconButton>
-                                    </Stack>
-                                </div>
-                            </ListItem>
-                        </Collapse>
-                    );
-                })}
-            </TransitionGroup>
-            <Divider textAlign='right' key={items.length}>
-                <IconButton size='small' onClick={handleAddToEnd()}>
-                    <AddIcon />
-                </IconButton>
-            </Divider>
+            <FixedSizeList height={530} itemCount={items.length} itemSize={120} width={450} itemData={items}>
+                {Row}
+            </FixedSizeList>
         </List>
     );
 }
@@ -660,7 +702,23 @@ class SequenceSettingType<E> implements SettingType<E[]> {
     }
 
     Format(value: E[]): string {
-        return '[' + value.map((v: any) => this.elementType.Format(v)).join(', ') + ']';
+        let format = '';
+        const limit = 40;
+        let count = 0;
+
+        format = '[';
+
+        for (let i = 0; i < value.length; i++) {
+            const elm = this.elementType.Format(value[i]);
+            count += elm.length;
+            if (count <= limit || i === 0) format = format + elm + ', ';
+            else {
+                format = format + '... ';
+                break;
+            }
+        }
+        format = format + ']';
+        return format;
     }
 
     asData(value: any): (string | number)[] {
@@ -688,7 +746,7 @@ class SequenceSettingType<E> implements SettingType<E[]> {
             onChange: onChange,
             onValidityChange: onValidChange,
         };
-        if (this.elementType.editElementShort() && value.length < 50) {
+        if (this.elementType.editElementShort()) {
             // todo we check the length because we currently render large lists very slowly, we should fix that and
             //  remove this check
             return <ShortSequenceEdit {...props} />;
@@ -955,13 +1013,29 @@ class MapSettingType<V> implements SettingType<Record<string, V>> {
     }
 
     Format(value: Record<string, V>): string {
-        return (
-            '{' +
-            Object.entries(value)
-                .map(([k, v]) => k + ': ' + this.valueType.Format(v))
-                .join(', ') +
-            '}'
-        );
+        let format = '';
+        const limit = 40;
+        let index = 0;
+        let count = 0;
+
+        let isShortened = false;
+
+        format = '{';
+        for (const [k, v] of Object.entries(value)) {
+            const elm = k + ': ' + this.valueType.Format(v);
+            count += elm.length;
+            if (count <= limit || index === 0) format = format + elm + ', ';
+            else {
+                format = format + '...';
+                isShortened = true;
+                break;
+            }
+            index++;
+        }
+        if (!isShortened) format = format.slice(0, -2);
+        format = format + '}';
+        return format;
+
     }
 
     asData(value: any): string | number {
@@ -1023,6 +1097,7 @@ export function settingType(type: string): SettingType<any> {
         case 'float':
             return new FloatSettingType();
     }
+
     if (type.startsWith('Enum[')) {
         const parts = type.substring(5, type.length - 1).split(',');
         const values = parts.map((v) => JSON.parse(v));
