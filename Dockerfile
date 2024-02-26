@@ -7,7 +7,7 @@ ENV REACT_APP_BACKEND_URL=
 RUN npm run build
 
 # production stage
-FROM python:3.8 as production-stage
+FROM python:3.11.6-slim-bookworm as production-stage
 # Build nginx taken from https://github.com/nginxinc/docker-nginx/blob/master/mainline/debian/Dockerfile
 ENV NGINX_VERSION   1.19.6
 ENV NJS_VERSION     0.5.0
